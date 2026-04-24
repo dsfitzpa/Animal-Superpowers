@@ -179,11 +179,14 @@ export default function SpeciesDetail({ dataset, speciesName, onClose }: Props) 
                     </div>
                     <ul className="space-y-1.5">
                       {review.citations.map((c, i) => {
-                        const translateHref = `/translate?species=${encodeURIComponent(
-                          speciesName!
-                        )}&sp=${encodeURIComponent(
-                          key
-                        )}&ref=${encodeURIComponent(c.label)}`;
+                        const tParams = new URLSearchParams({
+                          species: speciesName!,
+                          sp: key,
+                          ref: c.label,
+                        });
+                        if (c.doi) tParams.set("doi", c.doi);
+                        tParams.set("title", c.label);
+                        const translateHref = `/translate?${tParams.toString()}`;
                         return (
                           <li
                             key={i}

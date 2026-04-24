@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import ScoreForm, { type FeatureState } from "@/components/ScoreForm";
@@ -9,7 +9,8 @@ import SimilarCases from "@/components/SimilarCases";
 import FeatureImportanceChart from "@/components/FeatureImportanceChart";
 import CaseSpectrum from "@/components/CaseSpectrum";
 import WorkedExamples from "@/components/WorkedExamples";
-import { score, type FeatureMap, type FeatureName } from "@/lib/model";
+import PaperInputPanel, { type PaperMeta } from "@/components/PaperInputPanel";
+import { score as clientScore, type FeatureMap, type FeatureName, type ScoreResult as ScoreResultType } from "@/lib/model";
 import {
   trainingCases,
   speciesReviewToCase,
@@ -18,6 +19,13 @@ import {
   type TrainingCase,
 } from "@/lib/training";
 import { dataset as speciesDataset } from "@/lib/data";
+import {
+  API_BASE,
+  evaluatePaper,
+  ping,
+  scoreFeatures,
+  type ScoreSource,
+} from "@/lib/api";
 
 const defaultFeatures: FeatureState = {
   mechanism_clarity: 5,
@@ -60,6 +68,30 @@ function featuresFromCase(c: TrainingCase): FeatureState {
   };
 }
 
+function featuresFromMap(m: FeatureMap): FeatureState {
+  const hasHC =
+    m.human_cell_validation !== undefined &&
+    m.assay_translatability !== undefined;
+  return {
+    mechanism_clarity: (m.mechanism_clarity as number) ?? 5,
+    ortholog_conservation: (m.ortholog_conservation as number) ?? 5,
+    target_druggability: (m.target_druggability as number) ?? 5,
+    pathway_redundancy: (m.pathway_redundancy as number) ?? 5,
+    effect_size_reported: (m.effect_size_reported as number) ?? 5,
+    is_secreted_product: (m.is_secreted_product as 0 | 1) ?? 0,
+    is_small_molecule_or_peptide:
+      (m.is_small_molecule_or_peptide as 0 | 1) ?? 0,
+    requires_expression_system:
+      (m.requires_expression_system as 0 | 1) ?? 0,
+    phenotype_is_organismal: (m.phenotype_is_organismal as 0 | 1) ?? 0,
+    evidenceProvided: hasHC,
+    cross_species_consistency: (m.cross_species_consistency as number) ?? 5,
+    human_cell_validation: (m.human_cell_validation as number) ?? 5,
+    assay_translatability: (m.assay_translatability as number) ?? 5,
+    regulatory_precedent: (m.regulatory_precedent as number) ?? 5,
+  };
+}
+
 function toFeatureMap(s: FeatureState): FeatureMap {
   const m: FeatureMap = {
     mechanism_clarity: s.mechanism_clarity,
@@ -94,21 +126,60 @@ export default function TranslatePage() {
 function TranslateInner() {
   const params = useSearchParams();
   const [tab, setTab] = useState<Tab>("evaluate");
+  const [paper, setPaper] = useState<PaperMeta>({
+    title: "",
+    doi: "",
+    species: "",
+    abstract: "",
+  });
   const [features, setFeatures] = useState<FeatureState>(defaultFeatures);
   const [contextBanner, setContextBanner] = useState<string | null>(null);
+  const [apiAvailable, setApiAvailable] = useState<boolean>(false);
+  const [extracting, setExtracting] = useState<boolean>(false);
+  const [extractHint, setExtractHint] = useState<string | null>(null);
 
-  // Prefill from URL params on mount / change
+  // Score state is either (a) the latest API-computed score or (b) the
+  // client-side score of the current feature state. We prefer (a) when present
+  // because it reflects the API source; form edits reset to (b).
+  const [result, setResult] = useState<ScoreResultType | null>(null);
+  const [source, setSource] = useState<ScoreSource>("client");
+  const [sourceNote, setSourceNote] = useState<string | undefined>();
+
+  // Probe API on mount
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!API_BASE) return;
+      const ok = await ping();
+      if (!cancelled) setApiAvailable(ok);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Prefill from URL params
   useEffect(() => {
     const caseId = params.get("caseId");
     const species = params.get("species");
     const sp = params.get("sp");
+    const ref = params.get("ref");
+    const title = params.get("title");
+    const doi = params.get("doi");
+    const abstract = params.get("abstract");
 
     if (caseId) {
       const c = trainingCases.find((x) => x.caseId === caseId);
       if (c) {
         setFeatures(featuresFromCase(c));
+        setPaper({
+          title: c.name,
+          doi: "",
+          species: c.species,
+          abstract: c.description,
+        });
         setContextBanner(
-          `Loaded from training case ${c.caseId}: ${c.name}`
+          `Loaded from training case ${c.caseId}. Features taken from blind-coded row in training set.`
         );
         return;
       }
@@ -116,30 +187,118 @@ function TranslateInner() {
     if (species) {
       const key = sp ? `${species}::${sp}` : "";
       const mapped = key ? speciesReviewToCase[key] : undefined;
+      const spMeta = sp ? speciesDataset.superpowers[sp]?.label : null;
       if (mapped) {
         const c = trainingCases.find((x) => x.caseId === mapped);
         if (c) {
           setFeatures(featuresFromCase(c));
-          const spMeta = sp ? speciesDataset.superpowers[sp]?.label : null;
+          setPaper({
+            title: ref || c.name,
+            doi: doi || "",
+            species,
+            abstract: abstract || c.description,
+          });
           setContextBanner(
-            `Prefilled from matched training case ${c.caseId} for ${species}` +
-              (spMeta ? ` — ${spMeta}` : "")
+            `Prefilled from matched training case ${c.caseId}${
+              spMeta ? ` — ${spMeta}` : ""
+            }. Edit the paper fields or sliders to rescore.`
           );
           return;
         }
       }
-      const spMeta = sp ? speciesDataset.superpowers[sp]?.label : null;
       setFeatures(defaultFeatures);
+      setPaper({
+        title: ref || (title ?? ""),
+        doi: doi || "",
+        species: species,
+        abstract: abstract || "",
+      });
       setContextBanner(
-        `Scoring: ${species}${spMeta ? ` — ${spMeta}` : ""} · features not pre-mapped · adjust the sliders below.`
+        `Scoring: ${species}${spMeta ? ` — ${spMeta}` : ""}${
+          ref ? ` · ${ref}` : ""
+        }. Paste an abstract to auto-extract features, or fill the sliders manually.`
       );
+      return;
+    }
+    if (title || doi || abstract) {
+      setPaper({
+        title: title ?? "",
+        doi: doi ?? "",
+        species: species ?? "",
+        abstract: abstract ?? "",
+      });
+      setContextBanner(`Scoring paper from URL parameters.`);
       return;
     }
     setContextBanner(null);
   }, [params]);
 
   const featureMap = useMemo(() => toFeatureMap(features), [features]);
-  const result = useMemo(() => score(featureMap), [featureMap]);
+
+  // Whenever features change, attempt an API score (with client fallback).
+  // Debounce via ref-like pattern: we kick a fresh request on every feature
+  // change and let the latest response win by checking a ref.
+  useEffect(() => {
+    let cancelled = false;
+    // Always set a client-side score immediately so the UI never lags.
+    setResult(clientScore(featureMap));
+    setSource(API_BASE ? "client" : "client");
+    setSourceNote(undefined);
+
+    if (!API_BASE) return;
+    (async () => {
+      const outcome = await scoreFeatures(featureMap);
+      if (cancelled) return;
+      setResult(outcome.result);
+      setSource(outcome.source);
+      setSourceNote(outcome.note);
+      if (outcome.source === "client-fallback") {
+        setApiAvailable(false);
+      } else if (outcome.source === "api") {
+        setApiAvailable(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [featureMap]);
+
+  const handleExtract = useCallback(async () => {
+    if (!paper.abstract.trim()) return;
+    setExtracting(true);
+    setExtractHint(null);
+    try {
+      const out = await evaluatePaper({
+        title: paper.title,
+        species: paper.species,
+        text: paper.abstract,
+      });
+      if (!out) {
+        setExtractHint("API not configured — cannot auto-extract. Use the sliders below.");
+        return;
+      }
+      if (out.source === "client-fallback") {
+        setExtractHint(
+          out.note || "API unreachable — client fallback. Feature extraction requires the API."
+        );
+        return;
+      }
+      // Success: overwrite features
+      setFeatures(featuresFromMap(out.extractedFeatures));
+      setResult(out.score);
+      setSource(out.source);
+      setSourceNote(undefined);
+      setExtractHint(
+        out.confidenceNote
+          ? `Extracted — ${out.confidenceNote}`
+          : "Features extracted from abstract. Adjust any you disagree with."
+      );
+    } catch (e) {
+      setExtractHint(e instanceof Error ? e.message : String(e));
+    } finally {
+      setExtracting(false);
+    }
+  }, [paper]);
 
   return (
     <main className="max-w-[1200px] mx-auto px-5 py-8 text-slate-200">
@@ -148,14 +307,15 @@ function TranslateInner() {
           Translational Discovery
         </div>
         <h1 className="font-serif text-2xl md:text-3xl text-slate-100 mt-1">
-          Will this animal finding translate to a human therapeutic?
+          Score a paper for therapeutic translation
         </h1>
         <p className="text-slate-400 text-[13px] md:text-sm mt-1 max-w-3xl">
-          A logistic regression trained on 61 curated historical cases scores
-          the likelihood that a biological phenomenon in an animal will reach
-          an approved drug or sustained clinical use. Provide what you know;
-          the model drops missing features and reports a 95% confidence
-          interval on the coefficients.
+          Describe a paper — title, species, abstract — and the model predicts
+          how likely the phenomenon it reports will translate to a human
+          therapeutic. With an abstract provided, features are auto-extracted
+          via the API. Without one, move the sliders and score continuously.
+          Trained on 61 curated historical cases (LOO-CV AUC 0.975; blind AUC
+          0.964).
         </p>
       </section>
 
@@ -180,7 +340,7 @@ function TranslateInner() {
               : "border-transparent text-slate-400 hover:text-slate-200"
           }`}
         >
-          Evaluate one study
+          Evaluate one paper
         </button>
         <button
           onClick={() => setTab("explore")}
@@ -192,6 +352,11 @@ function TranslateInner() {
         >
           Explore &amp; rank set
         </button>
+        <ApiStatusPill
+          apiAvailable={apiAvailable}
+          source={source}
+          note={sourceNote}
+        />
         <a
           href="#methodology"
           className="ml-auto text-[12px] text-slate-400 hover:text-slate-200"
@@ -201,19 +366,42 @@ function TranslateInner() {
       </div>
 
       {tab === "evaluate" ? (
-        <div className="mt-6 grid lg:grid-cols-[minmax(0,1fr)_380px] gap-6">
-          <ScoreForm features={features} setFeatures={setFeatures} />
-          <div className="space-y-5">
-            <ScoreResult result={result} />
-            <SimilarCases query={featureMap} cases={trainingCases} />
+        <div className="mt-6 space-y-6">
+          <PaperInputPanel
+            paper={paper}
+            setPaper={setPaper}
+            apiAvailable={apiAvailable}
+            extracting={extracting}
+            onExtract={handleExtract}
+            hint={extractHint}
+          />
+
+          <div className="grid lg:grid-cols-[minmax(0,1fr)_380px] gap-6">
+            <ScoreForm features={features} setFeatures={setFeatures} />
+            <div className="space-y-5">
+              {result && (
+                <>
+                  <ScoreResult result={result} />
+                  <SimilarCases query={featureMap} cases={trainingCases} />
+                </>
+              )}
+            </div>
           </div>
         </div>
       ) : (
-        <ExploreTab onOpenCase={(c) => {
-          setFeatures(featuresFromCase(c));
-          setContextBanner(`Loaded from training case ${c.caseId}: ${c.name}`);
-          setTab("evaluate");
-        }} />
+        <ExploreTab
+          onOpenCase={(c) => {
+            setFeatures(featuresFromCase(c));
+            setPaper({
+              title: c.name,
+              doi: "",
+              species: c.species,
+              abstract: c.description,
+            });
+            setContextBanner(`Loaded from training case ${c.caseId}: ${c.name}`);
+            setTab("evaluate");
+          }}
+        />
       )}
 
       <section
@@ -224,11 +412,10 @@ function TranslateInner() {
         <div className="mt-3 space-y-3 text-[13px] text-slate-300 max-w-3xl leading-relaxed">
           <p>
             <strong className="text-slate-100">What we predict:</strong> the
-            likelihood that an animal biological phenomenon will translate to
-            a human therapeutic, defined as an approved drug or sustained
-            clinical use. The model is an L2-regularized logistic regression
-            trained on 61 curated historical cases (16 translators, 45
-            non-translators).
+            likelihood that an animal biological phenomenon translates to a
+            human therapeutic (approved drug or sustained clinical use). The
+            model is an L2-regularized logistic regression trained on 61
+            curated historical cases (16 translators, 45 non-translators).
           </p>
           <p>
             <strong className="text-slate-100">How we know it works:</strong>{" "}
@@ -243,16 +430,15 @@ function TranslateInner() {
             when <code className="text-sky-300">human_cell_validation</code>{" "}
             and <code className="text-sky-300">assay_translatability</code>{" "}
             are provided, the full 13-feature model runs. When absent, a
-            reduced 11-feature &quot;Pre-HC&quot; model automatically takes
-            over — predicting the likelihood of advancing to human-cell
-            testing rather than all the way to a drug. Missing features
-            contribute zero to the logit, not an imputed mean.
+            reduced 11-feature <em>Pre-HC</em> model automatically takes over
+            — predicting the likelihood of advancing to human-cell testing
+            rather than all the way to a drug. Missing features contribute
+            zero to the logit, not an imputed mean.
           </p>
           <p>
             <strong className="text-slate-100">What it cannot predict:</strong>{" "}
             commercial viability, funding, regulatory shifts, or creative
-            researchers overcoming structural barriers. Use the score as a
-            prompt for discussion, not a decision.
+            researchers overcoming structural barriers.
           </p>
         </div>
 
@@ -266,10 +452,9 @@ function TranslateInner() {
             </div>
             <p className="mt-2 text-[11px] text-slate-500 max-w-md">
               Forest plot of L2-regularized coefficients with 95% bootstrap
-              CIs. Positive coefficients (blue) push translation probability
-              up; negative (red) push down. Number on the right is sign
-              consistency across bootstrap resamples — features below 0.85
-              are greyed out and should be trusted only directionally.
+              CIs. Positive (blue) push translation probability up; negative
+              (red) push down. Number on the right is bootstrap sign
+              consistency — below 0.85 the feature is greyed out.
             </p>
           </div>
           <div>
@@ -281,8 +466,8 @@ function TranslateInner() {
             </div>
             <p className="mt-2 text-[11px] text-slate-500 max-w-md">
               Each dot is a training case at its leave-one-out predicted
-              probability. Hover for the case name. The dashed line is the
-              0.5 decision threshold.
+              probability. Hover for the case name. Dashed line = 0.5
+              threshold.
             </p>
           </div>
         </div>
@@ -295,17 +480,54 @@ function TranslateInner() {
           <p className="mt-3 text-[11px] text-slate-500 max-w-2xl">
             <span className="text-emerald-400">P03 Captopril</span> and{" "}
             <span className="text-emerald-400">P05 Caplacizumab</span> are
-            true positives — the model scores both high.{" "}
+            true positives.{" "}
             <span className="text-rose-400">N12 Antler regeneration</span> is
-            a true negative — the model correctly scores low.{" "}
+            a true negative.{" "}
             <span className="text-amber-400">P26 Mambalgin</span> is an
-            instructive miss: the features look translator-like but the
-            compound has not yet advanced clinically — read the case in the
-            Explore tab for why.
+            instructive miss — see the Explore tab.
           </p>
         </div>
       </section>
     </main>
+  );
+}
+
+function ApiStatusPill({
+  apiAvailable,
+  source,
+  note,
+}: {
+  apiAvailable: boolean;
+  source: ScoreSource;
+  note?: string;
+}) {
+  if (!API_BASE) {
+    return (
+      <span
+        className="text-[11px] px-2 py-0.5 rounded-full border border-slate-700 text-slate-400"
+        title="NEXT_PUBLIC_API_BASE is unset. Scoring runs client-side using lib/model.ts."
+      >
+        ● client-side
+      </span>
+    );
+  }
+  if (source === "api") {
+    return (
+      <span
+        className="text-[11px] px-2 py-0.5 rounded-full border border-emerald-800 bg-emerald-950/40 text-emerald-300"
+        title={`API at ${API_BASE}`}
+      >
+        ● API
+      </span>
+    );
+  }
+  return (
+    <span
+      className="text-[11px] px-2 py-0.5 rounded-full border border-amber-800 bg-amber-950/40 text-amber-300"
+      title={note || (apiAvailable ? "" : "API unreachable — using client-side model")}
+    >
+      ● fallback
+    </span>
   );
 }
 
@@ -381,10 +603,9 @@ function ExploreTab({ onOpenCase }: { onOpenCase: (c: TrainingCase) => void }) {
   return (
     <div className="mt-6">
       <p className="text-[13px] text-slate-400 max-w-3xl mb-4">
-        Browse all 61 training cases ranked by the leave-one-out predicted
+        Browse all 61 training cases ranked by leave-one-out predicted
         probability. Use this to find the most-likely translation candidates
-        and to inspect the model&apos;s errors. Click any row to load its
-        features into the Evaluate tab.
+        and inspect model errors. Click any row to load into Evaluate.
       </p>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -446,33 +667,21 @@ function ExploreTab({ onOpenCase }: { onOpenCase: (c: TrainingCase) => void }) {
                 className="text-left px-4 py-2.5 cursor-pointer"
               >
                 Predicted{" "}
-                {sortKey === "predicted"
-                  ? dir === "asc"
-                    ? "↑"
-                    : "↓"
-                  : "↕"}
+                {sortKey === "predicted" ? (dir === "asc" ? "↑" : "↓") : "↕"}
               </th>
               <th
                 onClick={() => setSort("outcome")}
                 className="text-left px-4 py-2.5 cursor-pointer"
               >
                 Outcome{" "}
-                {sortKey === "outcome"
-                  ? dir === "asc"
-                    ? "↑"
-                    : "↓"
-                  : "↕"}
+                {sortKey === "outcome" ? (dir === "asc" ? "↑" : "↓") : "↕"}
               </th>
               <th
                 onClick={() => setSort("modality")}
                 className="text-left px-4 py-2.5 cursor-pointer"
               >
                 Modality{" "}
-                {sortKey === "modality"
-                  ? dir === "asc"
-                    ? "↑"
-                    : "↓"
-                  : "↕"}
+                {sortKey === "modality" ? (dir === "asc" ? "↑" : "↓") : "↕"}
               </th>
               <th className="text-left px-4 py-2.5 w-10">✓</th>
             </tr>
@@ -532,21 +741,6 @@ function ExploreTab({ onOpenCase }: { onOpenCase: (c: TrainingCase) => void }) {
         </table>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-3 text-[11px] text-slate-500">
-        <span className="flex items-center gap-1">
-          <CorrectnessDot kind="TP" /> correct positive
-        </span>
-        <span className="flex items-center gap-1">
-          <CorrectnessDot kind="TN" /> correct negative
-        </span>
-        <span className="flex items-center gap-1">
-          <CorrectnessDot kind="FP" /> false positive
-        </span>
-        <span className="flex items-center gap-1">
-          <CorrectnessDot kind="FN" /> false negative
-        </span>
-      </div>
-
       {selected && (
         <CaseModal
           c={selected}
@@ -576,10 +770,7 @@ function CorrectnessDot({ kind }: { kind: "TP" | "TN" | "FP" | "FN" }) {
       ? "bg-slate-400"
       : "bg-rose-500";
   return (
-    <span
-      className={`inline-block h-2.5 w-2.5 rounded-full ${c}`}
-      title={kind}
-    />
+    <span className={`inline-block h-2.5 w-2.5 rounded-full ${c}`} title={kind} />
   );
 }
 
@@ -606,7 +797,7 @@ function CaseModal({
   onClose: () => void;
   onOpen: (c: TrainingCase) => void;
 }) {
-  const r = score(c.features);
+  const r = clientScore(c.features);
   const up = r.contributions.filter((x) => x.contribution > 0).slice(0, 3);
   const down = r.contributions.filter((x) => x.contribution < 0).slice(0, 3);
 
@@ -723,6 +914,6 @@ function CaseModal({
   );
 }
 
-// Keep FeatureName import alive — referenced only transitively via model.ts imports.
+// keep referenced type alive
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type _KeepType = FeatureName;
