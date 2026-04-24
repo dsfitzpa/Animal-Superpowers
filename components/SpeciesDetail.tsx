@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
-import type { SpeciesDataset, Citation, TaxonNode } from "@/lib/types";
-import MammalWatermark from "./MammalWatermark";
+import type { SpeciesDataset, Citation } from "@/lib/types";
 
 interface Props {
   dataset: SpeciesDataset;
@@ -54,11 +53,6 @@ export default function SpeciesDetail({ dataset, speciesName, onClose }: Props) 
     return () => window.removeEventListener("keydown", onKey);
   }, [speciesName, onClose]);
 
-  const ancestry = useMemo(
-    () => (speciesName ? pathTo(dataset.taxonomy, speciesName) : []),
-    [speciesName, dataset.taxonomy]
-  );
-
   if (!speciesName) return null;
   const rec = dataset.species_data[speciesName];
   if (!rec) return null;
@@ -77,13 +71,7 @@ export default function SpeciesDetail({ dataset, speciesName, onClose }: Props) 
         aria-modal="true"
         className="relative z-10 w-full max-w-xl bg-panel border-l border-rule shadow-2xl flex flex-col h-full overflow-hidden"
       >
-        <MammalWatermark
-          scientificName={speciesName}
-          commonName={rec.common}
-          taxonomy={ancestry}
-          className="pointer-events-none absolute right-4 bottom-6 w-[320px] h-auto text-slate-200 opacity-[0.07] select-none"
-        />
-        <header className="relative p-5 border-b border-rule flex items-start justify-between gap-4">
+        <header className="p-5 border-b border-rule flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
               Species profile
@@ -120,7 +108,7 @@ export default function SpeciesDetail({ dataset, speciesName, onClose }: Props) 
           </button>
         </header>
 
-        <div className="relative flex-1 overflow-y-auto thin-scroll">
+        <div className="flex-1 overflow-y-auto thin-scroll">
           <section className="p-5 border-b border-rule">
             <p className="text-[14px] text-slate-200 leading-relaxed">
               {rec.headline}
@@ -248,26 +236,6 @@ function formatMass(g: number): string {
   if (g >= 1_000_000) return `${(g / 1_000_000).toFixed(1)} t`;
   if (g >= 1000) return `${(g / 1000).toFixed(1)} kg`;
   return `${g} g`;
-}
-
-/**
- * Walk the taxonomy tree and return the chain of names from the root to the
- * target species — used by MammalWatermark to pick the right silhouette.
- */
-function pathTo(root: TaxonNode, target: string): string[] {
-  const stack: Array<{ node: TaxonNode; path: string[] }> = [
-    { node: root, path: [root.name] },
-  ];
-  while (stack.length) {
-    const { node, path } = stack.pop()!;
-    if (node.name === target) return path;
-    if (node.children) {
-      for (const c of node.children) {
-        stack.push({ node: c, path: [...path, c.name] });
-      }
-    }
-  }
-  return [];
 }
 
 function speciesSlug(sci: string): string {
