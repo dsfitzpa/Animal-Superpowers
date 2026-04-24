@@ -46,36 +46,25 @@ export default function Home() {
 
   return (
     <main className="min-h-screen">
-      <header className="border-b border-rule">
-        <div className="max-w-[1400px] mx-auto px-5 py-5 flex flex-wrap items-end justify-between gap-4">
+      <section className="border-b border-rule">
+        <div className="max-w-[1400px] mx-auto px-5 py-6 flex flex-wrap items-end justify-between gap-4">
           <div>
             <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
               A therapeutic mammal tree
             </div>
             <h1 className="font-serif text-2xl md:text-3xl text-slate-100 mt-1">
-              Animal Superpowers
+              Mammals with biological superpowers
             </h1>
             <p className="text-slate-400 text-[13px] md:text-sm mt-1 max-w-2xl">
-              Mammals that have evolved extreme adaptations — extended lifespan,
-              viral tolerance, cancer resistance, limb regeneration — and the
-              human therapeutic targets their biology suggests.
+              Extreme adaptations — extended lifespan, viral tolerance, cancer
+              resistance, limb regeneration — and the human therapeutic targets
+              their biology suggests. Open any citation and click{" "}
+              <span className="text-sky-300">Score for translation →</span> to
+              run the Translational Discovery model.
             </p>
           </div>
-          <nav className="flex items-center gap-4 text-[12px] text-slate-400">
-            <a
-              href="https://github.com/dsfitzpa/Animal-Superpowers"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-slate-100"
-            >
-              GitHub
-            </a>
-            <a href="#about" className="hover:text-slate-100">
-              About
-            </a>
-          </nav>
         </div>
-      </header>
+      </section>
 
       <div className="max-w-[1400px] mx-auto px-5 py-6 flex flex-col lg:flex-row gap-6">
         <FilterSidebar

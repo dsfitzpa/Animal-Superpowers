@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import type { SpeciesDataset, Citation } from "@/lib/types";
 
@@ -176,12 +177,31 @@ export default function SpeciesDetail({ dataset, speciesName, onClose }: Props) 
                     <div className="text-[11px] uppercase tracking-wider text-slate-500 mb-1">
                       References
                     </div>
-                    <ul className="space-y-1">
-                      {review.citations.map((c, i) => (
-                        <li key={i}>
-                          <CitationLink c={c} />
-                        </li>
-                      ))}
+                    <ul className="space-y-1.5">
+                      {review.citations.map((c, i) => {
+                        const translateHref = `/translate?species=${encodeURIComponent(
+                          speciesName!
+                        )}&sp=${encodeURIComponent(
+                          key
+                        )}&ref=${encodeURIComponent(c.label)}`;
+                        return (
+                          <li
+                            key={i}
+                            className="flex items-start gap-2 flex-wrap"
+                          >
+                            <span className="flex-1 min-w-0">
+                              <CitationLink c={c} />
+                            </span>
+                            <Link
+                              href={translateHref}
+                              className="shrink-0 text-[11px] text-sky-400 hover:text-sky-200 whitespace-nowrap"
+                              title="Open this paper's context in Translational Discovery and score translation likelihood"
+                            >
+                              Score for translation →
+                            </Link>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                 )}
