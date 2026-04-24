@@ -153,6 +153,81 @@ export async function evaluatePaper(
   }
 }
 
+export interface EvaluatePdfOutcome {
+  score: ScoreResult;
+  extractedFeatures: FeatureMap;
+  paperTitle?: string;
+  sourceChars: number;
+  confidenceNote?: string;
+  source: ScoreSource;
+  note?: string;
+}
+
+/**
+ * Upload a PDF to the API. The server extracts text (pypdf), trims to
+ * ~30k chars, feeds it to the Claude extractor, and returns the score +
+ * features. No client-side fallback is meaningful here — without the API
+ * we simply can't read the PDF.
+ */
+export async function evaluatePdf(
+  file: File,
+  opts: { title?: string; species?: string; apiKey?: string } = {}
+): Promise<EvaluatePdfOutcome | null> {
+  if (!API_BASE) return null;
+  const form = new FormData();
+  form.append("file", file);
+  if (opts.title) form.append("title", opts.title);
+  if (opts.species) form.append("species", opts.species);
+
+  try {
+    const headers: Record<string, string> = {};
+    if (opts.apiKey) headers["X-API-Key"] = opts.apiKey;
+    const res = await fetch(`${API_BASE}/evaluate/pdf`, {
+      method: "POST",
+      body: form,
+      headers,
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      let detail = text;
+      try {
+        const j = JSON.parse(text);
+        if (j?.detail) detail = j.detail;
+      } catch {
+        /* ignore */
+      }
+      return {
+        score: clientScore({}),
+        extractedFeatures: {},
+        sourceChars: 0,
+        source: "client-fallback",
+        note: `API ${res.status} — ${detail.slice(0, 200)}`,
+      };
+    }
+    const raw = (await res.json()) as Record<string, unknown>;
+    const scoreRaw = raw.score as Record<string, unknown>;
+    const extractionRaw = raw.extraction as Record<string, unknown>;
+    const features = (extractionRaw?.features as FeatureMap) ?? {};
+    return {
+      score: apiToScoreResult(scoreRaw),
+      extractedFeatures: features,
+      paperTitle: raw.paper_title as string | undefined,
+      sourceChars: Number(raw.source_chars ?? 0),
+      confidenceNote: extractionRaw?.notes as string | undefined,
+      source: "api",
+    };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return {
+      score: clientScore({}),
+      extractedFeatures: {},
+      sourceChars: 0,
+      source: "client-fallback",
+      note: `API unreachable — ${msg.slice(0, 200)}`,
+    };
+  }
+}
+
 export async function ping(): Promise<boolean> {
   if (!API_BASE) return false;
   try {

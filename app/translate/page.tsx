@@ -22,6 +22,7 @@ import { dataset as speciesDataset } from "@/lib/data";
 import {
   API_BASE,
   evaluatePaper,
+  evaluatePdf,
   ping,
   scoreFeatures,
   type ScoreSource,
@@ -167,6 +168,68 @@ function TranslateInner() {
     const title = params.get("title");
     const doi = params.get("doi");
     const abstract = params.get("abstract");
+    const demoPdf = params.get("demoPdf");
+
+    if (demoPdf) {
+      const spLabel = sp ? speciesDataset.superpowers[sp]?.label : null;
+      const spName = species || "";
+      setFeatures(defaultFeatures);
+      setPaper({
+        title: title ?? "",
+        doi: doi ?? "",
+        species: spName,
+        abstract: "",
+      });
+      setContextBanner(
+        `Demo PDF loading for ${spName}${spLabel ? ` — ${spLabel}` : ""}. ` +
+          `The synthesized paper will be uploaded to the API and scored automatically.`
+      );
+      (async () => {
+        setExtracting(true);
+        try {
+          const res = await fetch(demoPdf);
+          if (!res.ok) {
+            setExtractHint(`Demo PDF ${res.status} — ${demoPdf}`);
+            return;
+          }
+          const blob = await res.blob();
+          const filename = demoPdf.split("/").pop() || "demo.pdf";
+          const file = new File([blob], filename, { type: "application/pdf" });
+          const out = await evaluatePdf(file, {
+            title: title ?? undefined,
+            species: spName || undefined,
+          });
+          if (!out) {
+            setExtractHint("API not configured — cannot score demo PDF.");
+            return;
+          }
+          if (out.source === "client-fallback") {
+            setExtractHint(out.note || "Demo PDF scoring failed.");
+            return;
+          }
+          setFeatures(featuresFromMap(out.extractedFeatures));
+          setResult(out.score);
+          setSource(out.source);
+          setSourceNote(undefined);
+          if (out.paperTitle) {
+            setPaper((p) => ({ ...p, title: p.title || out.paperTitle! }));
+          }
+          setExtractHint(
+            `Extracted from demo PDF (${out.sourceChars.toLocaleString()} chars). ` +
+              `Score is below — tweak any feature you disagree with.`
+          );
+        } catch (e) {
+          setExtractHint(
+            `Failed to load demo PDF: ${
+              e instanceof Error ? e.message : String(e)
+            }`
+          );
+        } finally {
+          setExtracting(false);
+        }
+      })();
+      return;
+    }
 
     if (caseId) {
       const c = trainingCases.find((x) => x.caseId === caseId);
@@ -263,7 +326,7 @@ function TranslateInner() {
     };
   }, [featureMap]);
 
-  const handleExtract = useCallback(async () => {
+  const handleExtractAbstract = useCallback(async () => {
     if (!paper.abstract.trim()) return;
     setExtracting(true);
     setExtractHint(null);
@@ -283,14 +346,13 @@ function TranslateInner() {
         );
         return;
       }
-      // Success: overwrite features
       setFeatures(featuresFromMap(out.extractedFeatures));
       setResult(out.score);
       setSource(out.source);
       setSourceNote(undefined);
       setExtractHint(
         out.confidenceNote
-          ? `Extracted — ${out.confidenceNote}`
+          ? `Extracted from abstract — ${out.confidenceNote}`
           : "Features extracted from abstract. Adjust any you disagree with."
       );
     } catch (e) {
@@ -299,6 +361,49 @@ function TranslateInner() {
       setExtracting(false);
     }
   }, [paper]);
+
+  const handleExtractPdf = useCallback(
+    async (file: File) => {
+      setExtracting(true);
+      setExtractHint(null);
+      try {
+        const out = await evaluatePdf(file, {
+          title: paper.title,
+          species: paper.species,
+        });
+        if (!out) {
+          setExtractHint(
+            "API not configured — cannot read PDFs. Paste the abstract instead."
+          );
+          return;
+        }
+        if (out.source === "client-fallback") {
+          setExtractHint(
+            out.note ||
+              "PDF extraction failed. Paste the abstract or try another file."
+          );
+          return;
+        }
+        setFeatures(featuresFromMap(out.extractedFeatures));
+        setResult(out.score);
+        setSource(out.source);
+        setSourceNote(undefined);
+        if (out.paperTitle && !paper.title) {
+          setPaper((p) => ({ ...p, title: out.paperTitle! }));
+        }
+        setExtractHint(
+          `Read ${out.sourceChars.toLocaleString()} characters from PDF${
+            out.confidenceNote ? ` — ${out.confidenceNote}` : "."
+          } Adjust any feature you disagree with.`
+        );
+      } catch (e) {
+        setExtractHint(e instanceof Error ? e.message : String(e));
+      } finally {
+        setExtracting(false);
+      }
+    },
+    [paper.title, paper.species]
+  );
 
   return (
     <main className="max-w-[1200px] mx-auto px-5 py-8 text-slate-200">
@@ -372,7 +477,8 @@ function TranslateInner() {
             setPaper={setPaper}
             apiAvailable={apiAvailable}
             extracting={extracting}
-            onExtract={handleExtract}
+            onExtractFromAbstract={handleExtractAbstract}
+            onExtractFromPdf={handleExtractPdf}
             hint={extractHint}
           />
 

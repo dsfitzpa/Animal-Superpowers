@@ -139,6 +139,14 @@ export default function SpeciesDetail({ dataset, speciesName, onClose }: Props) 
 
           {reviewEntries.map(([key, review]) => {
             const meta = dataset.superpowers[key];
+            const demoPdfPath = `/demo-papers/${speciesSlug(
+              speciesName!
+            )}__${key}.pdf`;
+            const demoHref = `/translate?${new URLSearchParams({
+              species: speciesName!,
+              sp: key,
+              demoPdf: demoPdfPath,
+            }).toString()}`;
             return (
               <section key={key} className="p-5 border-b border-rule last:border-0">
                 <div className="flex items-center gap-2 mb-2">
@@ -149,6 +157,13 @@ export default function SpeciesDetail({ dataset, speciesName, onClose }: Props) 
                   <h3 className="text-[12px] uppercase tracking-[0.16em] text-slate-300">
                     {meta?.label ?? key}
                   </h3>
+                  <Link
+                    href={demoHref}
+                    className="ml-auto text-[11px] text-sky-400 hover:text-sky-200 whitespace-nowrap"
+                    title="Open Translational Discovery with a synthesized demo PDF for this review and auto-run feature extraction"
+                  >
+                    Demo-analyze as PDF →
+                  </Link>
                 </div>
                 <div className="prose-invert-compact text-[13px]">
                   <ReactMarkdown>{review.summary}</ReactMarkdown>
@@ -221,4 +236,12 @@ function formatMass(g: number): string {
   if (g >= 1_000_000) return `${(g / 1_000_000).toFixed(1)} t`;
   if (g >= 1000) return `${(g / 1000).toFixed(1)} kg`;
   return `${g} g`;
+}
+
+function speciesSlug(sci: string): string {
+  return sci
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_|_$/g, "")
+    .slice(0, 60);
 }
