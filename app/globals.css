@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  background: #07090d;
+  color: #e5e7eb;
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: #fde68a;
+  color: #111827;
+}
+
+/* Tree-specific */
+.tree-link {
+  fill: none;
+  stroke: #334155;
+  stroke-width: 1;
+  transition: stroke 200ms ease, stroke-width 200ms ease, opacity 200ms ease;
+}
+.tree-link.active {
+  stroke: #cbd5e1;
+  stroke-width: 1.3;
+}
+.tree-node circle {
+  transition: fill 200ms ease, r 200ms ease, stroke 200ms ease;
+}
+.tree-label {
+  fill: #94a3b8;
+  font-size: 10px;
+  font-family: ui-serif, Georgia, serif;
+  pointer-events: none;
+  transition: fill 200ms ease, opacity 200ms ease;
+}
+.tree-label.species {
+  fill: #cbd5e1;
+  font-size: 11px;
+}
+.tree-label.highlight {
+  fill: #fff8e1;
+  font-weight: 600;
+}
+.tree-label.dim {
+  opacity: 0.25;
+}
+.tree-node.clickable {
+  cursor: pointer;
+}
+
+/* Scrollbar */
+.thin-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.thin-scroll::-webkit-scrollbar-track { background: transparent; }
+.thin-scroll::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 6px; }
+
+.prose-invert-compact p { margin: 0.5rem 0; line-height: 1.55; color: #cbd5e1; }
+.prose-invert-compact a { color: #93c5fd; text-decoration: underline; text-underline-offset: 2px; }
+.prose-invert-compact strong { color: #e5e7eb; }
+.prose-invert-compact ul { margin: 0.35rem 0 0.5rem 1.1rem; list-style: disc; color: #cbd5e1; }
+.prose-invert-compact li { margin: 0.15rem 0; }

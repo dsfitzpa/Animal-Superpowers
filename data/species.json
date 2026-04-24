@@ -1,0 +1,969 @@
+{
+  "$schema_notes": "Data curated for hackathon prototype. Every DOI and PMID below was surfaced from primary-source searches (Nature, eLife, Cell Reports, PNAS, Annual Reviews, etc.). Before shipping, open each DOI once to confirm it resolves — 6-hour deadlines make one broken link the thing judges notice.",
+  "superpowers": {
+    "longevity": {
+      "label": "Extreme Longevity",
+      "color": "#e8a33d",
+      "description": "Maximum lifespan far exceeding what body size predicts. Relevant to geroscience and healthspan extension."
+    },
+    "cancer_resistance": {
+      "label": "Cancer Resistance",
+      "color": "#d04a5e",
+      "description": "Very low spontaneous tumor incidence, often despite large body size or long lifespan (Peto's paradox resolvers)."
+    },
+    "dna_repair": {
+      "label": "Enhanced DNA Repair",
+      "color": "#5b8def",
+      "description": "Elevated double-strand break repair fidelity, nucleotide excision repair, or mismatch repair relative to short-lived mammals."
+    },
+    "viral_tolerance": {
+      "label": "Viral Tolerance",
+      "color": "#7a4fc4",
+      "description": "Asymptomatic carriage of viruses that cause severe disease in other mammals, typically via dampened inflammation rather than sterilizing immunity."
+    },
+    "innate_immunity": {
+      "label": "Tuned Innate Immunity",
+      "color": "#6aa84f",
+      "description": "Constitutive interferon expression, altered inflammasome activity, or unique pathogen sensing — relevant to autoimmunity, cytokine storm, and inflammaging."
+    },
+    "hypoxia_tolerance": {
+      "label": "Hypoxia / Ischemia Tolerance",
+      "color": "#3aa8a8",
+      "description": "Brain and tissue resilience to low oxygen; relevant to stroke, cardiac arrest, and organ transplantation."
+    },
+    "hibernation": {
+      "label": "Hibernation & Metabolic Suppression",
+      "color": "#8a6d3b",
+      "description": "Profound reversible metabolic depression without organ damage. Relevant to neuroprotection, trauma medicine, and space travel."
+    },
+    "regeneration": {
+      "label": "Tissue Regeneration",
+      "color": "#c266c2",
+      "description": "Mammalian regeneration of structures normally lost to scar tissue in humans — ear pinna, spinal cord, digit tips, antler."
+    }
+  },
+  "taxonomy": {
+    "name": "Mammalia",
+    "rank": "class",
+    "children": [
+      {
+        "name": "Afrotheria",
+        "rank": "superorder",
+        "children": [
+          {
+            "name": "Proboscidea",
+            "rank": "order",
+            "children": [
+              {
+                "name": "Elephantidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Loxodonta africana", "rank": "species", "common": "African elephant" },
+                  { "name": "Elephas maximus", "rank": "species", "common": "Asian elephant" }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Sirenia",
+            "rank": "order",
+            "children": [
+              {
+                "name": "Trichechidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Trichechus manatus", "rank": "species", "common": "West Indian manatee" }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Tubulidentata",
+            "rank": "order",
+            "children": [
+              {
+                "name": "Orycteropodidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Orycteropus afer", "rank": "species", "common": "Aardvark" }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Xenarthra",
+        "rank": "superorder",
+        "children": [
+          {
+            "name": "Pilosa",
+            "rank": "order",
+            "children": [
+              {
+                "name": "Choloepodidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Choloepus hoffmanni", "rank": "species", "common": "Hoffmann's two-toed sloth" }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Cingulata",
+            "rank": "order",
+            "children": [
+              {
+                "name": "Dasypodidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Dasypus novemcinctus", "rank": "species", "common": "Nine-banded armadillo" }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Euarchontoglires",
+        "rank": "superorder",
+        "children": [
+          {
+            "name": "Primates",
+            "rank": "order",
+            "children": [
+              {
+                "name": "Hominidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Homo sapiens", "rank": "species", "common": "Human" },
+                  { "name": "Pan troglodytes", "rank": "species", "common": "Chimpanzee" },
+                  { "name": "Gorilla gorilla", "rank": "species", "common": "Western gorilla" }
+                ]
+              },
+              {
+                "name": "Cercopithecidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Macaca mulatta", "rank": "species", "common": "Rhesus macaque" }
+                ]
+              },
+              {
+                "name": "Daubentoniidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Daubentonia madagascariensis", "rank": "species", "common": "Aye-aye" }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Rodentia",
+            "rank": "order",
+            "children": [
+              {
+                "name": "Bathyergidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Heterocephalus glaber", "rank": "species", "common": "Naked mole-rat" },
+                  { "name": "Fukomys damarensis", "rank": "species", "common": "Damaraland mole-rat" }
+                ]
+              },
+              {
+                "name": "Spalacidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Nannospalax galili", "rank": "species", "common": "Upper Galilee blind mole-rat" }
+                ]
+              },
+              {
+                "name": "Sciuridae",
+                "rank": "family",
+                "children": [
+                  { "name": "Ictidomys tridecemlineatus", "rank": "species", "common": "Thirteen-lined ground squirrel" },
+                  { "name": "Marmota marmota", "rank": "species", "common": "Alpine marmot" }
+                ]
+              },
+              {
+                "name": "Muridae",
+                "rank": "family",
+                "children": [
+                  { "name": "Mus musculus", "rank": "species", "common": "House mouse" },
+                  { "name": "Rattus norvegicus", "rank": "species", "common": "Brown rat" },
+                  { "name": "Acomys cahirinus", "rank": "species", "common": "Cairo spiny mouse" }
+                ]
+              },
+              {
+                "name": "Caviidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Hydrochoerus hydrochaeris", "rank": "species", "common": "Capybara" }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Lagomorpha",
+            "rank": "order",
+            "children": [
+              {
+                "name": "Leporidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Oryctolagus cuniculus", "rank": "species", "common": "European rabbit" }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Laurasiatheria",
+        "rank": "superorder",
+        "children": [
+          {
+            "name": "Chiroptera",
+            "rank": "order",
+            "children": [
+              {
+                "name": "Pteropodidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Pteropus alecto", "rank": "species", "common": "Black flying fox" },
+                  { "name": "Rousettus aegyptiacus", "rank": "species", "common": "Egyptian fruit bat" }
+                ]
+              },
+              {
+                "name": "Vespertilionidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Myotis brandtii", "rank": "species", "common": "Brandt's bat" },
+                  { "name": "Myotis davidii", "rank": "species", "common": "David's myotis" },
+                  { "name": "Eptesicus fuscus", "rank": "species", "common": "Big brown bat" }
+                ]
+              },
+              {
+                "name": "Desmodontinae",
+                "rank": "subfamily",
+                "children": [
+                  { "name": "Desmodus rotundus", "rank": "species", "common": "Common vampire bat" }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Cetartiodactyla",
+            "rank": "order",
+            "children": [
+              {
+                "name": "Balaenidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Balaena mysticetus", "rank": "species", "common": "Bowhead whale" }
+                ]
+              },
+              {
+                "name": "Delphinidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Tursiops truncatus", "rank": "species", "common": "Common bottlenose dolphin" }
+                ]
+              },
+              {
+                "name": "Camelidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Camelus dromedarius", "rank": "species", "common": "Dromedary camel" }
+                ]
+              },
+              {
+                "name": "Giraffidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Giraffa tippelskirchi", "rank": "species", "common": "Masai giraffe" }
+                ]
+              },
+              {
+                "name": "Cervidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Rangifer tarandus", "rank": "species", "common": "Reindeer" }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Carnivora",
+            "rank": "order",
+            "children": [
+              {
+                "name": "Phocidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Leptonychotes weddellii", "rank": "species", "common": "Weddell seal" }
+                ]
+              },
+              {
+                "name": "Ursidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Ursus maritimus", "rank": "species", "common": "Polar bear" }
+                ]
+              },
+              {
+                "name": "Mustelidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Enhydra lutris", "rank": "species", "common": "Sea otter" }
+                ]
+              },
+              {
+                "name": "Canidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Canis lupus familiaris", "rank": "species", "common": "Domestic dog" }
+                ]
+              },
+              {
+                "name": "Felidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Felis catus", "rank": "species", "common": "Domestic cat" }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Eulipotyphla",
+            "rank": "order",
+            "children": [
+              {
+                "name": "Soricidae",
+                "rank": "family",
+                "children": [
+                  { "name": "Sorex araneus", "rank": "species", "common": "Common shrew" }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "species_data": {
+    "Heterocephalus glaber": {
+      "common": "Naked mole-rat",
+      "lifespan_years": 37,
+      "body_mass_g": 35,
+      "image_hint": "naked mole-rat Heterocephalus glaber",
+      "superpowers": ["longevity", "cancer_resistance", "hypoxia_tolerance"],
+      "headline": "Lives >37 years with near-zero cancer incidence and survives 18 minutes of total oxygen deprivation.",
+      "reviews": {
+        "longevity": {
+          "summary": "Naked mole-rats (NMRs) have the longest maximum lifespan of any rodent, exceeding 37 years — roughly ten times that of a similarly-sized mouse. Their mortality hazard does not rise with age, violating the Gompertz law that governs aging in most mammals. Proposed mechanisms include high-molecular-mass hyaluronan (HMM-HA) produced by fibroblasts, unusually stable proteostasis, robust DNA repair, and a chromatin state resistant to Yamanaka-factor reprogramming. The NMR is now a staple model for geroscience and interventional aging research.",
+          "human_targets": ["HAS2 (hyaluronan synthase 2)", "p16INK4a / CDKN2A locus", "Nrf2 pathway", "Proteasome chaperones"],
+          "citations": [
+            { "label": "Ruby et al. 2018, eLife — NMR mortality defies Gompertz", "doi": "10.7554/eLife.31157" },
+            { "label": "Tian et al. 2013, Nature — HMM-HA mediates cancer resistance", "doi": "10.1038/nature12234" },
+            { "label": "Lewis et al. 2015, PNAS — Nrf2 signaling and longevity", "doi": "10.1073/pnas.1417566112" },
+            { "label": "Kim et al. 2011, Nature — NMR genome sequencing", "doi": "10.1038/nature10533" }
+          ]
+        },
+        "cancer_resistance": {
+          "summary": "NMRs display extreme resistance to spontaneous tumors and resist experimental carcinogenesis. The dominant mechanism described to date is HMM-HA, which interacts with CD44 to trigger early contact inhibition via p16INK4a. NMR cells also engage a secondary 'pALT' isoform from the INK4 locus and show unusual hypersensitivity to loss of single tumor suppressors, which triggers apoptosis rather than proliferation. Cagan et al. additionally showed NMRs are an outlier in the somatic mutation rate vs body-mass relationship, accumulating mutations slowly.",
+          "human_targets": ["HAS2 overexpression (HA-based oncology)", "CD44 signaling", "p16INK4a/pALT", "Somatic mutation rate modifiers"],
+          "citations": [
+            { "label": "Tian et al. 2013, Nature — HMM-HA cancer resistance", "doi": "10.1038/nature12234" },
+            { "label": "Seluanov et al. 2018, Nat Rev Cancer — Cancer resistance in long-lived mammals", "doi": "10.1038/s41568-018-0004-9" },
+            { "label": "Cagan et al. 2022, Nature — Somatic mutation rates scale with lifespan", "doi": "10.1038/s41586-022-04618-z" }
+          ]
+        },
+        "hypoxia_tolerance": {
+          "summary": "NMRs live in crowded underground burrows with oxygen levels that would be lethal to most mammals. Park et al. showed NMRs switch to fructose-driven anaerobic glycolysis under anoxia, allowing brain tissue to survive 18 minutes of zero-oxygen exposure — a feat no other mammal matches. Their GluN2D NMDA-receptor subunit persists into adulthood, delaying calcium-driven excitotoxicity during hypoxic stress.",
+          "human_targets": ["Fructose/GLUT5 metabolic switching", "GluN2D NMDA receptor modulation", "HIF pathway"],
+          "citations": [
+            { "label": "Park et al. 2017, Science — Fructose-driven anoxia survival in NMRs", "doi": "10.1126/science.aab3896" },
+            { "label": "Omotoso et al. 2021, Biogerontology — NMR hypoxia mechanisms review", "doi": "10.1007/s10522-020-09912-9" }
+          ]
+        }
+      }
+    },
+    "Balaena mysticetus": {
+      "common": "Bowhead whale",
+      "lifespan_years": 211,
+      "body_mass_g": 80000000,
+      "image_hint": "bowhead whale Balaena mysticetus arctic",
+      "superpowers": ["longevity", "cancer_resistance", "dna_repair"],
+      "headline": "Longest-lived mammal (>200 years) with enhanced DNA double-strand break repair via elevated CIRBP.",
+      "reviews": {
+        "longevity": {
+          "summary": "Bowheads are estimated to live over 200 years — recovery of stone harpoon points from living individuals corroborates this. Keane et al. sequenced the bowhead genome and identified bowhead-specific substitutions in ERCC1 (nucleotide excision repair) and duplications of PCNA and LAMTOR1. A 2025 Nature paper from the Gorbunova/Seluanov lab identified cold-inducible RNA-binding protein (CIRBP) as a major driver of their enhanced DNA repair — overexpressing bowhead CIRBP in Drosophila extended lifespan and increased resistance to ionizing radiation.",
+          "human_targets": ["CIRBP (cold-inducible RNA-binding protein)", "ERCC1 (NER pathway)", "PCNA", "CDKN2C"],
+          "citations": [
+            { "label": "Keane et al. 2015, Cell Reports — Bowhead genome & longevity", "doi": "10.1016/j.celrep.2014.12.008" },
+            { "label": "Firsanov et al. 2025, Nature — CIRBP drives DNA repair in bowhead whale", "doi": "10.1038/s41586-025-09694-5" }
+          ]
+        },
+        "dna_repair": {
+          "summary": "Bowhead fibroblasts exhibit enhanced double-strand break repair capacity and fidelity compared to human, mouse, and cow cells, along with lower mutation rates. CIRBP is expressed at very high levels in bowhead tissues and, when overexpressed in human and Drosophila cells, improves DNA damage resistance. Paradoxically, bowhead cells require fewer oncogenic hits than human cells to transform — suggesting their cancer resistance is front-loaded at the mutation-prevention step rather than at transformation.",
+          "human_targets": ["CIRBP overexpression therapy", "DSB repair pathway tuning", "NER fidelity modulation"],
+          "citations": [
+            { "label": "Firsanov et al. 2025, Nature — CIRBP DNA repair in bowhead", "doi": "10.1038/s41586-025-09694-5" },
+            { "label": "Keane et al. 2015, Cell Reports — ERCC1, PCNA", "doi": "10.1016/j.celrep.2014.12.008" }
+          ]
+        },
+        "cancer_resistance": {
+          "summary": "Despite being the second-largest animal on Earth (>80,000 kg) and the longest-lived mammal, bowheads show very low cancer incidence — a canonical example of Peto's paradox. Unlike elephants, they lack TP53 duplications. The mechanism instead appears to be radically enhanced genome maintenance (low mutation accumulation) combined with a CDKN2C duplication that reinforces cell cycle checkpoints.",
+          "human_targets": ["CDKN2C (p18INK4C)", "Genome maintenance pathways"],
+          "citations": [
+            { "label": "Toren et al. 2024, Heliyon — DNA repair & anti-cancer in bowhead", "doi": "10.1016/j.heliyon.2024.e38037" },
+            { "label": "Seluanov et al. 2018, Nat Rev Cancer — Review", "doi": "10.1038/s41568-018-0004-9" }
+          ]
+        }
+      }
+    },
+    "Loxodonta africana": {
+      "common": "African elephant",
+      "lifespan_years": 65,
+      "body_mass_g": 6000000,
+      "image_hint": "African elephant Loxodonta africana",
+      "superpowers": ["cancer_resistance", "longevity"],
+      "headline": "Carries 20 copies of TP53 and a resurrected LIF6 'zombie' gene that trigger apoptosis on DNA damage.",
+      "reviews": {
+        "cancer_resistance": {
+          "summary": "Elephants are the textbook Peto's-paradox species: 100× more cells than humans but cancer mortality of only ~3% vs 11-25% in humans. Abegglen et al. (JAMA 2015) and Sulak et al. (eLife 2016) independently showed elephants carry ~20 copies of TP53 (1 canonical + 19 retrogenes) that arose via segmental duplication as proboscideans evolved large body size ~40 Mya. Vazquez et al. (Cell Reports 2018) showed LIF6 — a pseudogene resurrected in elephants — is transcribed by TP53 on DNA damage and localizes to mitochondria to trigger apoptosis. Elephant peripheral blood lymphocytes undergo apoptosis at 2-3× the rate of human controls after genotoxic stress.",
+          "human_targets": ["TP53 retrogene delivery (PEEL Therapeutics)", "LIF6 mitochondrial apoptosis mimetics", "p53 activators (MDM2 inhibitors)"],
+          "citations": [
+            { "label": "Abegglen et al. 2015, JAMA — 20 copies of TP53", "doi": "10.1001/jama.2015.13134" },
+            { "label": "Sulak et al. 2016, eLife — TP53 copy number expansion & body size", "doi": "10.7554/eLife.11994" },
+            { "label": "Vazquez et al. 2018, Cell Reports — LIF6 zombie gene", "doi": "10.1016/j.celrep.2018.07.042" }
+          ]
+        },
+        "longevity": {
+          "summary": "Elephants live 60-70 years in the wild, extraordinary for such a large terrestrial mammal. Their TP53 amplification and resulting DNA damage hypersensitivity are believed to have co-evolved with body size — large, long-lived animals need proportionally stronger tumor suppression to maintain lifespan. Additional proposed mechanisms include telomere dynamics and reduced telomerase activity as a cancer-prevention trade-off.",
+          "human_targets": ["TP53 pathway augmentation", "Telomerase-independent replicative senescence"],
+          "citations": [
+            { "label": "Caulin & Maley 2011, Trends Ecol Evol — Peto's paradox", "doi": "10.1016/j.tree.2011.01.002" },
+            { "label": "Abegglen et al. 2015, JAMA", "doi": "10.1001/jama.2015.13134" }
+          ]
+        }
+      }
+    },
+    "Elephas maximus": {
+      "common": "Asian elephant",
+      "lifespan_years": 70,
+      "body_mass_g": 5000000,
+      "image_hint": "Asian elephant Elephas maximus",
+      "superpowers": ["cancer_resistance", "longevity"],
+      "headline": "Independent confirmation of 20× TP53 copy expansion — shares cancer-resistance architecture with African elephant.",
+      "reviews": {
+        "cancer_resistance": {
+          "summary": "Both Elephas maximus and Loxodonta africana genomes contain multiple copies of TP53 retrogenes, consistent with an ancestral proboscidean expansion. Asian elephant cells likewise show DNA-damage hypersensitivity and elevated apoptosis, offering a second independent line of evidence that TP53-pathway dosage underlies elephant cancer resistance.",
+          "human_targets": ["TP53 retrogene family", "MDM2 inhibitors"],
+          "citations": [
+            { "label": "Abegglen et al. 2015, JAMA", "doi": "10.1001/jama.2015.13134" },
+            { "label": "Sulak et al. 2016, eLife", "doi": "10.7554/eLife.11994" }
+          ]
+        }
+      }
+    },
+    "Pteropus alecto": {
+      "common": "Black flying fox",
+      "lifespan_years": 30,
+      "body_mass_g": 800,
+      "image_hint": "black flying fox Pteropus alecto",
+      "superpowers": ["viral_tolerance", "innate_immunity", "longevity"],
+      "headline": "Constitutive interferon-α expression plus dampened NLRP3 inflammasome — hosts Hendra, Nipah, and filoviruses without symptoms.",
+      "reviews": {
+        "viral_tolerance": {
+          "summary": "Pteropus alecto is a natural reservoir for Hendra virus, Nipah virus, and henipaviruses without apparent disease. Zhou et al. (PNAS 2016) showed P. alecto has a contracted type-I IFN locus but constitutively expresses IFN-α in healthy tissue — a tonic antiviral state. Ahn et al. (Nat Microbiol 2019) demonstrated NLRP3-mediated inflammation is profoundly dampened by three mechanisms: reduced transcriptional priming, a unique splice variant, and a modified leucine-rich repeat domain. Ahn et al. (Cell 2023) identified ASC2 (PYDC1), previously thought primate-specific, as a bat inflammasome suppressor that blocks ASC speck formation.",
+          "human_targets": ["NLRP3 inhibitors (MCC950 class)", "ASC2 mimetics", "Constitutive low-dose IFN therapy", "PYHIN-pathway modulators"],
+          "citations": [
+            { "label": "Zhou et al. 2016, PNAS — Constitutive IFN-α in Pteropus", "doi": "10.1073/pnas.1518240113" },
+            { "label": "Ahn et al. 2019, Nat Microbiol — Dampened NLRP3", "doi": "10.1038/s41564-019-0371-3" },
+            { "label": "Ahn et al. 2023, Cell — Bat ASC2 suppresses inflammasomes", "doi": "10.1016/j.cell.2023.03.036" }
+          ]
+        },
+        "innate_immunity": {
+          "summary": "Bat innate immunity is characterized by 'tolerance' rather than 'resistance': high antiviral readiness (constitutive ISGs, elevated IRF7, expanded IFN-ω locus in some species) combined with muted inflammation (PYHIN gene family loss, ASC2 expression, altered c-Rel binding in the TNFα promoter). This de-coupling is attractive for human therapy because cytokine storm — not viral load — drives much of the morbidity in COVID-19, sepsis, and autoinflammatory disease.",
+          "human_targets": ["PYHIN / AIM2 pathway", "STING tuning", "IRF3 / IRF7 modulation", "TNFα c-Rel promoter mimicry"],
+          "citations": [
+            { "label": "Ahn et al. 2016, Sci Rep — PYHIN loss in bats", "doi": "10.1038/srep21722" },
+            { "label": "Ahn et al. 2023, Cell — ASC2", "doi": "10.1016/j.cell.2023.03.036" },
+            { "label": "Irving et al. 2021, Nature — Lessons from the host defences of bats", "doi": "10.1038/s41586-020-03128-0" }
+          ]
+        },
+        "longevity": {
+          "summary": "Despite high metabolic rates from flight, many bats live far longer than predicted by body mass. Longevity correlates with the same dampened inflammatory pathways implicated in viral tolerance — inflammaging is reduced. Brandt's bat (Myotis brandtii) is the record-holder.",
+          "human_targets": ["Inflammaging pathways", "IGF-1 signaling"],
+          "citations": [
+            { "label": "Foley et al. 2018, Sci Adv — Bat longevity genomics", "doi": "10.1126/sciadv.aao0926" }
+          ]
+        }
+      }
+    },
+    "Myotis brandtii": {
+      "common": "Brandt's bat",
+      "lifespan_years": 41,
+      "body_mass_g": 7,
+      "image_hint": "Brandt's bat Myotis brandtii",
+      "superpowers": ["longevity", "viral_tolerance"],
+      "headline": "7-gram bat that lives 41+ years — the most extreme body-mass-to-lifespan ratio of any mammal.",
+      "reviews": {
+        "longevity": {
+          "summary": "Brandt's bat holds the record for longest lifespan relative to body mass in mammals — a 7g animal that can live over 41 years. Seim et al. (Nature Commun 2013) sequenced its genome and identified mutations in GHR and IGF1R that alter growth hormone signaling — the same pathways implicated in long-lived Ames and Snell dwarf mice. Combined with hibernation (which reduces annual metabolic load) and the general bat dampened-inflammation profile, GH/IGF-1 reduction appears to drive this outlier longevity.",
+          "human_targets": ["Growth hormone receptor (GHR) antagonism", "IGF-1R modulation", "mTOR / rapamycin analogs"],
+          "citations": [
+            { "label": "Seim et al. 2013, Nature Commun — Myotis brandtii genome", "doi": "10.1038/ncomms3212" }
+          ]
+        },
+        "viral_tolerance": {
+          "summary": "As a vespertilionid bat, Myotis brandtii shares the broad chiropteran innate-immunity profile: dampened NLRP3, PYHIN family loss, and elevated baseline IFN signaling. These traits are thought to have co-evolved with flight — elevated self-DNA release from high metabolic activity required suppression of DNA-triggered inflammation.",
+          "human_targets": ["Same as Pteropus alecto viral-tolerance pathways"],
+          "citations": [
+            { "label": "Ahn et al. 2019, Nat Microbiol", "doi": "10.1038/s41564-019-0371-3" }
+          ]
+        }
+      }
+    },
+    "Desmodus rotundus": {
+      "common": "Common vampire bat",
+      "lifespan_years": 29,
+      "body_mass_g": 40,
+      "image_hint": "common vampire bat Desmodus rotundus",
+      "superpowers": ["viral_tolerance", "innate_immunity"],
+      "headline": "Saliva anticoagulant 'desmoteplase' (DSPA) was in Phase III trials for ischemic stroke.",
+      "reviews": {
+        "innate_immunity": {
+          "summary": "Vampire bat saliva contains desmoteplase (DSPA α1), a plasminogen activator with much higher fibrin-specificity than human tPA. It reached Phase III clinical trials (DIAS-3, DIAS-4) for extending the ischemic stroke treatment window beyond 4.5 hours. While the Phase III trials did not meet primary endpoints, DSPA remains a case study in bat-derived therapeutics and fibrin-selective thrombolysis.",
+          "human_targets": ["Plasminogen activators (fibrin-selective)", "Extended-window stroke thrombolysis"],
+          "citations": [
+            { "label": "Albers et al. 2015, Lancet Neurol — DIAS-3 trial", "doi": "10.1016/S1474-4422(15)00199-3" },
+            { "label": "Reddrop et al. 2005, Stroke — DSPA vs tPA", "doi": "10.1161/01.STR.0000177870.14967.94" }
+          ]
+        },
+        "viral_tolerance": {
+          "summary": "Vampire bats are significant rabies reservoirs and carry SARS-related coronaviruses. Like other bats, their innate immunity is tuned toward tolerance. Zepeda Mendoza et al. (Nature Ecol Evol 2018) sequenced the D. rotundus genome and gut metagenome, finding immune adaptations alongside the unique blood-feeding phenotype.",
+          "human_targets": ["Broadly chiropteran innate-immunity targets"],
+          "citations": [
+            { "label": "Zepeda Mendoza et al. 2018, Nat Ecol Evol — Vampire bat hologenome", "doi": "10.1038/s41559-018-0476-8" }
+          ]
+        }
+      }
+    },
+    "Ictidomys tridecemlineatus": {
+      "common": "Thirteen-lined ground squirrel",
+      "lifespan_years": 8,
+      "body_mass_g": 200,
+      "image_hint": "thirteen-lined ground squirrel Ictidomys tridecemlineatus",
+      "superpowers": ["hibernation", "hypoxia_tolerance"],
+      "headline": "Cerebral blood flow drops 90% during torpor with no brain damage — a natural model for stroke neuroprotection.",
+      "reviews": {
+        "hibernation": {
+          "summary": "I. tridecemlineatus is the premier hibernation model organism. During torpor, body temperature falls to 2-10°C, heart rate drops below 5% of normal, and cerebral blood flow is reduced by 90% — conditions that would be fatal-level ischemia in humans. Yet the squirrels emerge each spring without detectable brain damage. Tau protein is reversibly hyperphosphorylated during torpor (a state resembling Alzheimer pathology that fully resolves on arousal), suggesting tau aggregation is not a one-way street. Melatonin-receptor signaling, STAT3 activation, and cytoskeletal remodeling have all been implicated in the neuroprotective phenotype.",
+          "human_targets": ["Tau phosphorylation reversibility (AD)", "Melatonin receptor agonists", "STAT3 neuroprotection", "Synthetic torpor induction (trauma / transplant)"],
+          "citations": [
+            { "label": "Frerichs et al. 1994, JCBFM — 90% CBF reduction without damage", "doi": "10.1038/jcbfm.1994.27" },
+            { "label": "Schwartz et al. 2013, PLOS ONE — Seasonal brain gene expression", "doi": "10.1371/journal.pone.0058427" },
+            { "label": "Sahdo et al. 2013, PLOS ONE — Hibernation proteomics", "doi": "10.1371/journal.pone.0071627" },
+            { "label": "Arendt et al. 2003, J Neurosci — Reversible tau hyperphosphorylation", "doi": "10.1523/JNEUROSCI.23-18-06972.2003" }
+          ]
+        },
+        "hypoxia_tolerance": {
+          "summary": "Ground squirrel tissues and isolated mitochondria tolerate anoxia followed by rapid reoxygenation in vitro. A 2025 JEB study showed that arousal from hibernation dramatically increases blood oxygen saturation without the reperfusion injury seen in human stroke. The ischemia-reperfusion tolerance phenotype is an active target for drug discovery aimed at stroke, cardiac arrest, and organ preservation.",
+          "human_targets": ["Mitochondrial permeability transition pore (mPTP)", "Organ preservation solutions", "Ischemia-reperfusion injury"],
+          "citations": [
+            { "label": "Duffy et al. 2025, J Exp Biol — Arousal and blood O2 saturation", "doi": "10.1242/jeb.249830" },
+            { "label": "Dave et al. 2012, Comp Biochem Physiol B — Neuroprotection from hibernators", "doi": "10.1016/j.cbpb.2011.10.007" }
+          ]
+        }
+      }
+    },
+    "Nannospalax galili": {
+      "common": "Upper Galilee blind mole-rat",
+      "lifespan_years": 21,
+      "body_mass_g": 180,
+      "image_hint": "blind mole rat Spalax Nannospalax galili",
+      "superpowers": ["cancer_resistance", "hypoxia_tolerance", "longevity"],
+      "headline": "Secretes IFN-β to trigger 'concerted cell death' in pre-malignant tissue; cancer has never been observed in the wild.",
+      "reviews": {
+        "cancer_resistance": {
+          "summary": "Blind mole-rats (Spalax / Nannospalax) live ~20 years, ten times the mouse lifespan, and have never been observed with spontaneous tumors. Gorbunova et al. (PNAS 2012) discovered that when Spalax fibroblasts hyperproliferate, they release interferon-β to trigger concerted necrotic cell death of the entire population — an extreme fail-safe that eliminates pre-malignant clones. Zhao et al. (Nat Immunol 2021) additionally showed retrotransposon reactivation triggers a cGAS–STING innate immune response that confers cancer resistance.",
+          "human_targets": ["cGAS–STING modulators", "Type-I IFN dosing in oncology", "Concerted cell death mimetics"],
+          "citations": [
+            { "label": "Gorbunova et al. 2012, PNAS — Concerted necrotic cell death", "doi": "10.1073/pnas.1217211109" },
+            { "label": "Zhao et al. 2021, Nat Immunol — Transposon-triggered innate immunity", "doi": "10.1038/s41590-021-01047-4" }
+          ]
+        },
+        "hypoxia_tolerance": {
+          "summary": "Spalax lives in sealed subterranean tunnels at ~7% oxygen — below the level at which most mammals develop pulmonary edema. Their VEGF expression is elevated, HIF-1α regulation is altered, and a unique p53 variant with a lysine-to-arginine substitution at position 174 shifts its response from apoptosis toward cell cycle arrest under hypoxia.",
+          "human_targets": ["HIF-1α stabilizers (anemia, ischemia)", "VEGF regulation", "p53 hypoxia-specific mimetics"],
+          "citations": [
+            { "label": "Ashur-Fabian et al. 2004, PNAS — Evolution of p53 in hypoxia-adapted Spalax", "doi": "10.1073/pnas.0402205101" }
+          ]
+        }
+      }
+    },
+    "Camelus dromedarius": {
+      "common": "Dromedary camel",
+      "lifespan_years": 40,
+      "body_mass_g": 500000,
+      "image_hint": "dromedary camel Camelus dromedarius",
+      "superpowers": ["innate_immunity"],
+      "headline": "Heavy-chain-only antibodies (nanobodies) — now a clinical therapeutic platform (caplacizumab).",
+      "reviews": {
+        "innate_immunity": {
+          "summary": "Camelids (camels, llamas, alpacas) produce a unique class of heavy-chain-only antibodies (HCAbs) lacking light chains. Their variable domain — the VHH or 'nanobody' — is 15 kDa (vs 150 kDa for IgG), highly stable, and can reach epitopes conventional antibodies cannot. Caplacizumab (Cablivi), a nanobody targeting vWF, was approved by the FDA in 2019 for acquired thrombotic thrombocytopenic purpura. Nanobody platforms are now in trials for oncology, COVID-19, and neurodegeneration.",
+          "human_targets": ["Nanobody therapeutics (any soluble target)", "BBB-penetrant biologics", "Intracellular antibody delivery"],
+          "citations": [
+            { "label": "Hamers-Casterman et al. 1993, Nature — Heavy-chain-only antibodies", "doi": "10.1038/363446a0" },
+            { "label": "Scully et al. 2019, NEJM — Caplacizumab for TTP", "doi": "10.1056/NEJMoa1806311" }
+          ]
+        }
+      }
+    },
+    "Leptonychotes weddellii": {
+      "common": "Weddell seal",
+      "lifespan_years": 30,
+      "body_mass_g": 450000,
+      "image_hint": "Weddell seal Leptonychotes weddellii Antarctic",
+      "superpowers": ["hypoxia_tolerance"],
+      "headline": "Dives to 600m for 80 minutes on a single breath — extreme tolerance to hypoxia and CO₂.",
+      "reviews": {
+        "hypoxia_tolerance": {
+          "summary": "Weddell seals make the deepest and longest dives of any pinniped. They tolerate arterial PO₂ levels that would cause unconsciousness in humans, aided by massive myoglobin stores in skeletal muscle, bradycardia during the dive response, and peripheral vasoconstriction that shunts blood to brain and heart. Mirceta et al. (Science 2013) found that deep-diving mammals convergently evolved high net surface charge on myoglobin, preventing aggregation at extreme concentrations. Seal cardiovascular physiology informs organ-preservation and cardiac-arrest research.",
+          "human_targets": ["Myoglobin surface engineering", "Selective vasoconstriction (cardiac arrest / shock)", "Hypoxia-ischemia neuroprotection"],
+          "citations": [
+            { "label": "Mirceta et al. 2013, Science — Myoglobin charge and dive capacity", "doi": "10.1126/science.1234192" },
+            { "label": "Allen & Vázquez-Medina 2019, Front Physiol — Hypoxia tolerance in marine mammals", "doi": "10.3389/fphys.2019.01199" }
+          ]
+        }
+      }
+    },
+    "Ursus maritimus": {
+      "common": "Polar bear",
+      "lifespan_years": 30,
+      "body_mass_g": 450000,
+      "image_hint": "polar bear Ursus maritimus arctic",
+      "superpowers": ["hibernation"],
+      "headline": "Pregnant females fast for 8 months in dens without muscle loss, osteoporosis, or kidney failure.",
+      "reviews": {
+        "hibernation": {
+          "summary": "Bears are 'carnivoran hibernators' — unlike rodents, their body temperature drops only ~5-6°C while metabolism falls ~75%. They maintain muscle and bone mass during multi-month fasts, recycle urea nitrogen into protein, and emerge insulin-sensitive. This profile makes bears a model for sarcopenia, disuse osteoporosis, chronic kidney disease, and diabetes. Liu et al. (Cell Reports 2014) identified polar-bear-specific mutations in APOB (lipid metabolism) that may underlie their ability to subsist on a >30% fat diet without atherosclerosis.",
+          "human_targets": ["APOB / lipid handling", "Urea recycling (CKD)", "Disuse osteoporosis countermeasures", "Insulin sensitivity maintenance"],
+          "citations": [
+            { "label": "Liu et al. 2014, Cell — Polar bear genome & APOB", "doi": "10.1016/j.cell.2014.03.054" },
+            { "label": "Nelson et al. 2014, Int J Obes — Bear hibernation physiology", "doi": "10.1038/ijo.2013.180" }
+          ]
+        }
+      }
+    },
+    "Acomys cahirinus": {
+      "common": "Cairo spiny mouse",
+      "lifespan_years": 5,
+      "body_mass_g": 50,
+      "image_hint": "African spiny mouse Acomys cahirinus",
+      "superpowers": ["regeneration"],
+      "headline": "Only known mammal that regenerates skin, hair follicles, cartilage, and muscle without scarring.",
+      "reviews": {
+        "regeneration": {
+          "summary": "Seifert et al. (Nature 2012) showed Acomys can autotomize skin to escape predators and subsequently regenerate the tissue — including hair follicles, sebaceous glands, dermis, and cartilage — with minimal scarring. This is unique among mammals. The regenerative response involves blastema-like structures and ECM composition more similar to salamanders than to Mus. Acomys has become a key comparative model for scar-free wound healing.",
+          "human_targets": ["Blastema-inducing factors", "ECM composition (hyaluronan, collagen III/I ratios)", "Anti-fibrotic wound healing"],
+          "citations": [
+            { "label": "Seifert et al. 2012, Nature — Skin regeneration in Acomys", "doi": "10.1038/nature11499" },
+            { "label": "Gawriluk et al. 2016, Nat Commun — Comparative regeneration", "doi": "10.1038/ncomms11164" }
+          ]
+        }
+      }
+    },
+    "Fukomys damarensis": {
+      "common": "Damaraland mole-rat",
+      "lifespan_years": 20,
+      "body_mass_g": 150,
+      "image_hint": "Damaraland mole-rat Fukomys damarensis",
+      "superpowers": ["longevity", "cancer_resistance"],
+      "headline": "Second eusocial mammal; shares longevity and cancer resistance with its cousin the naked mole-rat.",
+      "reviews": {
+        "longevity": {
+          "summary": "Damaraland mole-rats live ~20 years, far longer than similarly sized rodents, and are the only other known eusocial mammal besides Heterocephalus glaber. They provide a comparative reference for separating NMR-specific mechanisms from convergent bathyergid adaptations. Their longevity is associated with suppressed mTOR signaling and enhanced oxidative stress defenses.",
+          "human_targets": ["mTOR / rapamycin pathway", "Oxidative stress defense (Nrf2)"],
+          "citations": [
+            { "label": "Dammann 2017, Biogerontology — Long-lived mole-rats as aging models", "doi": "10.1007/s10522-017-9692-x" }
+          ]
+        }
+      }
+    },
+    "Rousettus aegyptiacus": {
+      "common": "Egyptian fruit bat",
+      "lifespan_years": 25,
+      "body_mass_g": 140,
+      "image_hint": "Egyptian fruit bat Rousettus aegyptiacus",
+      "superpowers": ["viral_tolerance", "innate_immunity"],
+      "headline": "Natural reservoir for Marburg virus without disease — a model for immune tolerance.",
+      "reviews": {
+        "viral_tolerance": {
+          "summary": "Rousettus aegyptiacus is the confirmed natural reservoir of Marburg virus. Guito et al. (Current Biology 2021) showed asymptomatic Marburg infection in this species is mediated by 'immunoprotective disease tolerance' — the bats clear the virus without the hyperinflammation that drives hemorrhagic disease in humans. Transcriptomic signatures show tempered IFN responses and downregulated inflammatory cytokines.",
+          "human_targets": ["Filovirus disease tolerance pathways", "Balanced IFN signaling"],
+          "citations": [
+            { "label": "Guito et al. 2021, Curr Biol — Marburg disease tolerance", "doi": "10.1016/j.cub.2020.10.015" }
+          ]
+        }
+      }
+    },
+    "Marmota marmota": {
+      "common": "Alpine marmot",
+      "lifespan_years": 18,
+      "body_mass_g": 5000,
+      "image_hint": "Alpine marmot Marmota marmota",
+      "superpowers": ["hibernation"],
+      "headline": "Hibernates for 6 months annually with reversible insulin resistance and protected cardiac function.",
+      "reviews": {
+        "hibernation": {
+          "summary": "Alpine marmots undergo multi-day torpor bouts interspersed with brief arousals. Their cardiac conduction is protected against hypothermia-induced arrhythmias — a property being studied for deep hypothermic circulatory arrest in cardiac surgery. Connexin 43 and 45 remodeling during torpor appears key.",
+          "human_targets": ["Cardiac hypothermia tolerance", "Connexin 43/45", "Seasonal insulin resistance"],
+          "citations": [
+            { "label": "Fedorov et al. 2009, Physiol Genomics — Hibernating cardiac conduction", "doi": "10.1152/physiolgenomics.90422.2008" }
+          ]
+        }
+      }
+    },
+    "Homo sapiens": {
+      "common": "Human",
+      "lifespan_years": 122,
+      "body_mass_g": 70000,
+      "image_hint": "",
+      "superpowers": [],
+      "headline": "Reference species — target of the therapeutic translation.",
+      "reviews": {}
+    },
+    "Mus musculus": {
+      "common": "House mouse",
+      "lifespan_years": 4,
+      "body_mass_g": 25,
+      "image_hint": "house mouse Mus musculus",
+      "superpowers": [],
+      "headline": "Standard lab model; short lifespan and high cancer incidence make it a useful negative control.",
+      "reviews": {}
+    },
+    "Rattus norvegicus": {
+      "common": "Brown rat",
+      "lifespan_years": 4,
+      "body_mass_g": 300,
+      "image_hint": "brown rat Rattus norvegicus",
+      "superpowers": [],
+      "headline": "Standard lab model; included as a phylogenetic reference.",
+      "reviews": {}
+    },
+    "Hydrochoerus hydrochaeris": {
+      "common": "Capybara",
+      "lifespan_years": 10,
+      "body_mass_g": 50000,
+      "image_hint": "capybara Hydrochoerus hydrochaeris",
+      "superpowers": [],
+      "headline": "Largest living rodent — phylogenetic context for bathyergid comparisons.",
+      "reviews": {}
+    },
+    "Giraffa tippelskirchi": {
+      "common": "Masai giraffe",
+      "lifespan_years": 28,
+      "body_mass_g": 800000,
+      "image_hint": "Masai giraffe Giraffa tippelskirchi",
+      "superpowers": ["innate_immunity"],
+      "headline": "Blood pressure of ~280/180 mmHg without hypertensive organ damage — a cardiovascular outlier.",
+      "reviews": {
+        "innate_immunity": {
+          "summary": "Giraffes maintain the highest systemic blood pressure of any mammal without developing the left ventricular hypertrophy, renal damage, or retinopathy seen in hypertensive humans. Agaba et al. (Nat Commun 2016) sequenced the giraffe genome and identified positively selected genes in FGFRL1 (cardiovascular development), and fibrosis pathways. The giraffe kidney handles supranormal perfusion pressure via thickened basement membranes and altered RAAS signaling.",
+          "human_targets": ["FGFRL1 signaling", "Renal hypertension resistance", "Cardiac hypertrophy pathways"],
+          "citations": [
+            { "label": "Agaba et al. 2016, Nat Commun — Giraffe genome", "doi": "10.1038/ncomms11519" }
+          ]
+        }
+      }
+    },
+    "Daubentonia madagascariensis": {
+      "common": "Aye-aye",
+      "lifespan_years": 23,
+      "body_mass_g": 2500,
+      "image_hint": "aye-aye Daubentonia madagascariensis",
+      "superpowers": [],
+      "headline": "Phylogenetic placeholder — illustrates primate diversity on the tree.",
+      "reviews": {}
+    },
+    "Enhydra lutris": {
+      "common": "Sea otter",
+      "lifespan_years": 23,
+      "body_mass_g": 25000,
+      "image_hint": "sea otter Enhydra lutris",
+      "superpowers": [],
+      "headline": "Highest mass-specific metabolic rate of any marine mammal — thermogenesis model.",
+      "reviews": {}
+    },
+    "Canis lupus familiaris": {
+      "common": "Domestic dog",
+      "lifespan_years": 20,
+      "body_mass_g": 20000,
+      "image_hint": "domestic dog",
+      "superpowers": [],
+      "headline": "Comparative oncology partner — naturally occurring tumors that parallel human cancers.",
+      "reviews": {}
+    },
+    "Felis catus": {
+      "common": "Domestic cat",
+      "lifespan_years": 20,
+      "body_mass_g": 4500,
+      "image_hint": "domestic cat",
+      "superpowers": [],
+      "headline": "Phylogenetic reference.",
+      "reviews": {}
+    },
+    "Macaca mulatta": {
+      "common": "Rhesus macaque",
+      "lifespan_years": 40,
+      "body_mass_g": 7500,
+      "image_hint": "rhesus macaque Macaca mulatta",
+      "superpowers": [],
+      "headline": "Closest clinically used non-human primate model.",
+      "reviews": {}
+    },
+    "Pan troglodytes": {
+      "common": "Chimpanzee",
+      "lifespan_years": 60,
+      "body_mass_g": 45000,
+      "image_hint": "chimpanzee Pan troglodytes",
+      "superpowers": [],
+      "headline": "Closest living relative to humans; useful reference for evolutionary comparisons.",
+      "reviews": {}
+    },
+    "Gorilla gorilla": {
+      "common": "Western gorilla",
+      "lifespan_years": 40,
+      "body_mass_g": 160000,
+      "image_hint": "western gorilla",
+      "superpowers": [],
+      "headline": "Large-bodied great ape phylogenetic reference.",
+      "reviews": {}
+    },
+    "Myotis davidii": {
+      "common": "David's myotis",
+      "lifespan_years": 30,
+      "body_mass_g": 8,
+      "image_hint": "Myotis davidii bat",
+      "superpowers": ["viral_tolerance"],
+      "headline": "Source genome for the NLRP3 splice-variant discovery in bats.",
+      "reviews": {
+        "viral_tolerance": {
+          "summary": "Along with P. alecto, M. davidii was one of the two species in which the NLRP3 exon-7-negative splice variant was first identified, and contributed to establishing the bat-specific dampened inflammasome phenotype.",
+          "human_targets": ["NLRP3 splicing modulators"],
+          "citations": [
+            { "label": "Ahn et al. 2019, Nat Microbiol", "doi": "10.1038/s41564-019-0371-3" }
+          ]
+        }
+      }
+    },
+    "Eptesicus fuscus": {
+      "common": "Big brown bat",
+      "lifespan_years": 20,
+      "body_mass_g": 16,
+      "image_hint": "big brown bat Eptesicus fuscus",
+      "superpowers": ["innate_immunity"],
+      "headline": "TNFα c-Rel binding motif silences inflammation — promising autoimmune lead.",
+      "reviews": {
+        "innate_immunity": {
+          "summary": "Banerjee et al. (Sci Rep 2017) identified a unique c-Rel repressor binding motif in the promoter of E. fuscus TNFα that restricts TNFα transcription even under strong innate-immune stimulation. This is a rare example of a specific cis-regulatory change with clear therapeutic implications for anti-TNF biology in autoimmune disease.",
+          "human_targets": ["TNFα transcriptional repression", "c-Rel (NF-κB subunit) regulation"],
+          "citations": [
+            { "label": "Banerjee et al. 2017, Sci Rep — c-Rel silencing of bat TNFα", "doi": "10.1038/s41598-017-01513-w" }
+          ]
+        }
+      }
+    },
+    "Tursiops truncatus": {
+      "common": "Common bottlenose dolphin",
+      "lifespan_years": 50,
+      "body_mass_g": 250000,
+      "image_hint": "bottlenose dolphin Tursiops truncatus",
+      "superpowers": ["hypoxia_tolerance"],
+      "headline": "Extreme diving physiology with elevated myoglobin and selective vasoconstriction.",
+      "reviews": {
+        "hypoxia_tolerance": {
+          "summary": "Like other cetaceans, bottlenose dolphins carry high-charge myoglobin that allows extreme concentrations without aggregation. They share the convergent deep-diving adaptation profile described by Mirceta et al.",
+          "human_targets": ["Myoglobin engineering"],
+          "citations": [
+            { "label": "Mirceta et al. 2013, Science", "doi": "10.1126/science.1234192" }
+          ]
+        }
+      }
+    },
+    "Rangifer tarandus": {
+      "common": "Reindeer",
+      "lifespan_years": 15,
+      "body_mass_g": 120000,
+      "image_hint": "reindeer Rangifer tarandus",
+      "superpowers": ["regeneration"],
+      "headline": "Antler regrowth is the fastest known mammalian tissue regeneration — ~2 cm/day.",
+      "reviews": {
+        "regeneration": {
+          "summary": "Deer antlers regenerate annually, representing the only complete, periodic regeneration of a mammalian appendage. Wang et al. (Science 2019) described the deer genome and antler stem-cell biology, identifying oncogene-like proliferation genes expressed in a controlled, tumor-free manner. Comparative analysis shows convergent activation of tumor suppressors that balance this proliferation.",
+          "human_targets": ["Bone / limb regeneration", "Controlled proliferation without oncogenesis"],
+          "citations": [
+            { "label": "Wang et al. 2019, Science — Ruminant genomes & antler regeneration", "doi": "10.1126/science.aav6335" }
+          ]
+        }
+      }
+    },
+    "Choloepus hoffmanni": {
+      "common": "Hoffmann's two-toed sloth",
+      "lifespan_years": 40,
+      "body_mass_g": 5500,
+      "image_hint": "Hoffmann's two-toed sloth Choloepus hoffmanni",
+      "superpowers": [],
+      "headline": "Extreme metabolic economy — phylogenetic reference within Xenarthra.",
+      "reviews": {}
+    },
+    "Dasypus novemcinctus": {
+      "common": "Nine-banded armadillo",
+      "lifespan_years": 15,
+      "body_mass_g": 5500,
+      "image_hint": "nine-banded armadillo Dasypus novemcinctus",
+      "superpowers": [],
+      "headline": "Only non-human natural host of Mycobacterium leprae — leprosy model.",
+      "reviews": {}
+    },
+    "Sorex araneus": {
+      "common": "Common shrew",
+      "lifespan_years": 2,
+      "body_mass_g": 10,
+      "image_hint": "common shrew Sorex araneus",
+      "superpowers": [],
+      "headline": "Seasonal skull shrinkage (Dehnel's phenomenon) — brain regenerative plasticity.",
+      "reviews": {}
+    },
+    "Trichechus manatus": {
+      "common": "West Indian manatee",
+      "lifespan_years": 60,
+      "body_mass_g": 500000,
+      "image_hint": "manatee Trichechus manatus",
+      "superpowers": [],
+      "headline": "Afrotherian phylogenetic reference; shares ancestry with elephants.",
+      "reviews": {}
+    },
+    "Orycteropus afer": {
+      "common": "Aardvark",
+      "lifespan_years": 23,
+      "body_mass_g": 60000,
+      "image_hint": "aardvark Orycteropus afer",
+      "superpowers": [],
+      "headline": "Sole extant tubulidentate — broadens afrotherian coverage of the tree.",
+      "reviews": {}
+    },
+    "Oryctolagus cuniculus": {
+      "common": "European rabbit",
+      "lifespan_years": 12,
+      "body_mass_g": 2000,
+      "image_hint": "European rabbit Oryctolagus cuniculus",
+      "superpowers": [],
+      "headline": "Lagomorph reference species.",
+      "reviews": {}
+    }
+  }
+}
