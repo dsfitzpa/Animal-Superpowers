@@ -556,11 +556,20 @@ function TranslateInner() {
             <div className="bg-panel border border-rule rounded-md p-4">
               <FeatureImportanceChart />
             </div>
-            <p className="mt-2 text-[11px] text-slate-500 max-w-md">
-              Forest plot of L2-regularized coefficients with 95% bootstrap
-              CIs. Positive (blue) push translation probability up; negative
-              (red) push down. Number on the right is bootstrap sign
-              consistency — below 0.85 the feature is greyed out.
+            <p className="mt-2 text-[11px] text-slate-500 max-w-md leading-relaxed">
+              Forest plot of L2-regularized logistic-regression coefficients
+              (log-odds per +1 SD of the feature) with 95% bootstrap CIs.
+              Positive (blue) push translation probability up; negative (red)
+              push down. Coefficients are small because the features are
+              standardized and L2 shrinkage pulls them toward zero — a value
+              of <span className="font-mono">+0.11</span> for{" "}
+              <span className="font-mono">effect_size_reported</span> means a
+              one-SD bump in reported effect size increases the log-odds of
+              translation by ~0.11, or roughly a factor of{" "}
+              <span className="font-mono">exp(0.11) ≈ 1.12</span> on the
+              odds. Features greyed out have bootstrap sign consistency
+              below 0.85 (direction is uncertain — trust them only
+              directionally).
             </p>
           </div>
           <div>
