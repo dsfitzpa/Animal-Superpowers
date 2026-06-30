@@ -207,6 +207,7 @@ export default function LifeHistoryScatter() {
   const visiblePoints = points.filter((p) => !hidden.has(p.group));
 
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const zoomBehRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
   const [tip, setTip] = useState<{ x: number; y: number; text: string } | null>(null);
 
   const width = 720;
@@ -220,13 +221,25 @@ export default function LifeHistoryScatter() {
     svg.selectAll("*").remove();
     if (visiblePoints.length === 0) return;
 
-    const g = svg
+    // clip the plot area so zoomed-out-of-range points don't leak into axes
+    const clipId = "lh-clip";
+    svg
+      .append("defs")
+      .append("clipPath")
+      .attr("id", clipId)
+      .append("rect")
+      .attr("x", 0)
+      .attr("y", 0)
+      .attr("width", innerW)
+      .attr("height", innerH);
+
+    const root = svg
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
+    // ---- base scales (zoom = identity) ----
     const yExtent = d3.extent(visiblePoints, (d) => d.y) as [number, number];
-
-    const xScale = noXAxis
+    const xBase = noXAxis
       ? d3.scaleLinear().domain([0, 1]).range([0, innerW])
       : logScale
         ? d3
@@ -240,53 +253,18 @@ export default function LifeHistoryScatter() {
             .scaleLinear()
             .domain([0, (d3.max(visiblePoints, (d) => d.x) as number) * 1.05])
             .range([0, innerW]);
-    const yScale = logScale
+    const yBase = logScale
       ? d3.scaleLog().domain([yExtent[0] * 0.8, yExtent[1] * 1.2]).range([innerH, 0])
       : d3.scaleLinear().domain([0, yExtent[1] * 1.05]).range([innerH, 0]);
 
-    // axes
-    if (!noXAxis) {
-      const xAxis = logScale
-        ? d3.axisBottom(xScale).ticks(6, "~s")
-        : d3.axisBottom(xScale).ticks(6);
-      g.append("g")
-        .attr("transform", `translate(0,${innerH})`)
-        .call(xAxis as any)
-        .call((sel) => sel.selectAll("text").attr("fill", "#94a3b8").attr("font-size", 10))
-        .call((sel) => sel.selectAll("line").attr("stroke", "#1f2937"))
-        .call((sel) => sel.select(".domain").attr("stroke", "#334155"));
-    } else {
-      // baseline line only, no ticks
-      g.append("line")
-        .attr("x1", 0)
-        .attr("x2", innerW)
-        .attr("y1", innerH)
-        .attr("y2", innerH)
-        .attr("stroke", "#334155");
-    }
+    // ---- persistent containers ----
+    const xAxisG = root.append("g").attr("transform", `translate(0,${innerH})`);
+    const yAxisG = root.append("g");
+    const gridG = root.append("g").attr("stroke", "#111827");
 
-    const yAxis = logScale
-      ? d3.axisLeft(yScale).ticks(6, "~s")
-      : d3.axisLeft(yScale).ticks(6);
-    g.append("g")
-      .call(yAxis as any)
-      .call((sel) => sel.selectAll("text").attr("fill", "#94a3b8").attr("font-size", 10))
-      .call((sel) => sel.selectAll("line").attr("stroke", "#1f2937"))
-      .call((sel) => sel.select(".domain").attr("stroke", "#334155"));
-
-    // gridlines
-    g.append("g")
-      .attr("stroke", "#111827")
-      .selectAll("line")
-      .data(yScale.ticks(6))
-      .join("line")
-      .attr("x1", 0)
-      .attr("x2", innerW)
-      .attr("y1", (d) => yScale(d as number))
-      .attr("y2", (d) => yScale(d as number));
-
-    // axis labels
-    g.append("text")
+    // axis labels (static)
+    root
+      .append("text")
       .attr("x", innerW / 2)
       .attr("y", innerH + 42)
       .attr("text-anchor", "middle")
@@ -297,7 +275,8 @@ export default function LifeHistoryScatter() {
           ? "no X axis — points jittered horizontally"
           : niceUnitLabel(xCol) + (logScale ? " (log)" : "")
       );
-    g.append("text")
+    root
+      .append("text")
       .attr("transform", "rotate(-90)")
       .attr("x", -innerH / 2)
       .attr("y", -52)
@@ -306,24 +285,12 @@ export default function LifeHistoryScatter() {
       .attr("font-size", 12)
       .text(niceUnitLabel(yCol) + (logScale ? " (log)" : ""));
 
-    // regression line (only meaningful in log-log per the source papers,
-    // and only when an X variable is selected)
+    // regression fit (data-anchored — slope/R² don't change on zoom)
     let fit: { slope: number; intercept: number; r2: number } | null = null;
     if (!noXAxis && showFit && logScale && visiblePoints.length > 2) {
       fit = logRegression(visiblePoints);
-      const xMin = d3.min(visiblePoints, (d) => d.x) as number;
-      const xMax = d3.max(visiblePoints, (d) => d.x) as number;
-      const y0 = Math.pow(10, fit.slope * Math.log10(xMin) + fit.intercept);
-      const y1 = Math.pow(10, fit.slope * Math.log10(xMax) + fit.intercept);
-      g.append("line")
-        .attr("x1", xScale(xMin))
-        .attr("y1", yScale(y0))
-        .attr("x2", xScale(xMax))
-        .attr("y2", yScale(y1))
-        .attr("stroke", "#f5d76e")
-        .attr("stroke-width", 1.5)
-        .attr("stroke-dasharray", "6 4");
-      g.append("text")
+      root
+        .append("text")
         .attr("x", innerW - 6)
         .attr("y", 14)
         .attr("text-anchor", "end")
@@ -332,87 +299,198 @@ export default function LifeHistoryScatter() {
         .text(`slope ${fit.slope.toFixed(2)} · R² ${fit.r2.toFixed(2)}`);
     }
 
-    // pick extremes to auto-label: max-Y, min-Y, and (if a fit was drawn) the
-    // point with the largest residual from the regression line in log space.
-    const labels: { name: string; cx: number; cy: number; kind: string }[] = [];
-    const seen = new Set<string>();
-    const pushLabel = (p: { name: string; x: number; y: number }, kind: string) => {
-      if (seen.has(p.name)) return;
-      seen.add(p.name);
-      labels.push({ name: p.name, cx: xScale(p.x), cy: yScale(p.y), kind });
-    };
-    const topY = visiblePoints.reduce((a, b) => (b.y > a.y ? b : a));
-    const botY = visiblePoints.reduce((a, b) => (b.y < a.y ? b : a));
-    pushLabel(topY, "longest-lived");
-    pushLabel(botY, "shortest-lived");
+    // outlier point (largest log-residual from fit) — computed once
+    let outlierName: string | null = null;
     if (fit) {
       let bestResid = 0;
-      let bestPt: typeof visiblePoints[number] | null = null;
       for (const p of visiblePoints) {
         const pred = fit.slope * Math.log10(p.x) + fit.intercept;
         const r = Math.abs(Math.log10(p.y) - pred);
         if (r > bestResid) {
           bestResid = r;
-          bestPt = p;
+          outlierName = p.name;
         }
       }
-      if (bestPt) pushLabel(bestPt, "outlier");
+    }
+    const topYName = visiblePoints.reduce((a, b) => (b.y > a.y ? b : a)).name;
+    const botYName = visiblePoints.reduce((a, b) => (b.y < a.y ? b : a)).name;
+    const labelNames = Array.from(new Set([topYName, botYName, outlierName].filter(Boolean) as string[]));
+    const labelPoints = labelNames
+      .map((n) => visiblePoints.find((p) => p.name === n)!)
+      .filter(Boolean);
+
+    // clipped content
+    const content = root.append("g").attr("clip-path", `url(#${clipId})`);
+    const fitLineG = content.append("g");
+    const circlesG = content.append("g");
+    const labelsG = content.append("g").attr("pointer-events", "none");
+
+    // baseline (no-X mode shows a single bottom rule)
+    if (noXAxis) {
+      root
+        .append("line")
+        .attr("x1", 0)
+        .attr("x2", innerW)
+        .attr("y1", innerH)
+        .attr("y2", innerH)
+        .attr("stroke", "#334155");
     }
 
-    // points
-    g.append("g")
-      .selectAll("circle")
-      .data(visiblePoints)
-      .join("circle")
-      .attr("cx", (d) => xScale(d.x))
-      .attr("cy", (d) => yScale(d.y))
-      .attr("r", 3.2)
-      .attr("fill", (d) => colorFor(d.group, groups.indexOf(d.group)))
-      .attr("fill-opacity", 0.8)
-      .attr("stroke", "#07090d")
-      .attr("stroke-width", 0.5)
-      .on("mouseenter", (event, d) => {
-        const [mx, my] = d3.pointer(event, svgRef.current);
-        setTip({
-          x: mx,
-          y: my,
-          text: noXAxis
-            ? `${d.name} — ${formatVal(d.y)} ${shortUnit(yCol)}`
-            : `${d.name} — ${formatVal(d.x)} ${shortUnit(xCol)}, ${formatVal(d.y)} ${shortUnit(yCol)}`,
-        });
-      })
-      .on("mouseleave", () => setTip(null));
+    const styleAxis = (sel: d3.Selection<SVGGElement, unknown, null, undefined>) => {
+      sel.selectAll("text").attr("fill", "#94a3b8").attr("font-size", 10);
+      sel.selectAll("line").attr("stroke", "#1f2937");
+      sel.select(".domain").attr("stroke", "#334155");
+    };
 
-    // extreme-point labels — drawn last so they sit above the dots
-    const labelGroup = g.append("g").attr("pointer-events", "none");
-    for (const l of labels) {
-      // small leader dot to make the labeled point visible above the cloud
-      labelGroup
-        .append("circle")
-        .attr("cx", l.cx)
-        .attr("cy", l.cy)
-        .attr("r", 5)
-        .attr("fill", "none")
-        .attr("stroke", "#f8fafc")
-        .attr("stroke-width", 1.2);
-      // offset label so it doesn't clip the right edge or sit under the dot
-      const goLeft = l.cx > innerW - 120;
-      const tx = l.cx + (goLeft ? -8 : 8);
-      const ty = Math.max(12, Math.min(innerH - 4, l.cy - 8));
-      labelGroup
-        .append("text")
-        .attr("x", tx)
-        .attr("y", ty)
-        .attr("text-anchor", goLeft ? "end" : "start")
-        .attr("fill", "#f8fafc")
-        .attr("font-size", 11)
-        .attr("font-style", "italic")
-        .attr("stroke", "#07090d")
-        .attr("stroke-width", 3)
-        .attr("paint-order", "stroke")
-        .text(l.name);
-    }
+    type AnyScale = d3.ScaleContinuousNumeric<number, number>;
+
+    const draw = (xs: AnyScale, ys: AnyScale) => {
+      // axes
+      if (!noXAxis) {
+        const xAxis = logScale
+          ? d3.axisBottom(xs as any).ticks(6, "~s")
+          : d3.axisBottom(xs as any).ticks(6);
+        xAxisG.call(xAxis as any);
+        styleAxis(xAxisG as any);
+      }
+      const yAxis = logScale
+        ? d3.axisLeft(ys as any).ticks(6, "~s")
+        : d3.axisLeft(ys as any).ticks(6);
+      yAxisG.call(yAxis as any);
+      styleAxis(yAxisG as any);
+
+      // gridlines (Y)
+      gridG
+        .selectAll("line")
+        .data(ys.ticks(6) as number[])
+        .join("line")
+        .attr("x1", 0)
+        .attr("x2", innerW)
+        .attr("y1", (d) => ys(d))
+        .attr("y2", (d) => ys(d));
+
+      // regression line — endpoints are data, mapped through current scales
+      fitLineG.selectAll("*").remove();
+      if (fit) {
+        const xMin = d3.min(visiblePoints, (d) => d.x) as number;
+        const xMax = d3.max(visiblePoints, (d) => d.x) as number;
+        const y0 = Math.pow(10, fit.slope * Math.log10(xMin) + fit.intercept);
+        const y1 = Math.pow(10, fit.slope * Math.log10(xMax) + fit.intercept);
+        fitLineG
+          .append("line")
+          .attr("x1", xs(xMin))
+          .attr("y1", ys(y0))
+          .attr("x2", xs(xMax))
+          .attr("y2", ys(y1))
+          .attr("stroke", "#f5d76e")
+          .attr("stroke-width", 1.5)
+          .attr("stroke-dasharray", "6 4");
+      }
+
+      // circles
+      const circ = circlesG.selectAll<SVGCircleElement, typeof visiblePoints[number]>("circle")
+        .data(visiblePoints, (d) => d.name);
+      circ
+        .join(
+          (enter) =>
+            enter
+              .append("circle")
+              .attr("r", 3.2)
+              .attr("fill", (d) => colorFor(d.group, groups.indexOf(d.group)))
+              .attr("fill-opacity", 0.8)
+              .attr("stroke", "#07090d")
+              .attr("stroke-width", 0.5)
+              .on("mouseenter", (event, d) => {
+                const [mx, my] = d3.pointer(event, svgRef.current);
+                setTip({
+                  x: mx,
+                  y: my,
+                  text: noXAxis
+                    ? `${d.name} — ${formatVal(d.y)} ${shortUnit(yCol)}`
+                    : `${d.name} — ${formatVal(d.x)} ${shortUnit(xCol)}, ${formatVal(d.y)} ${shortUnit(yCol)}`,
+                });
+              })
+              .on("mouseleave", () => setTip(null)),
+          (update) => update,
+          (exit) => exit.remove()
+        )
+        .attr("cx", (d) => xs(d.x))
+        .attr("cy", (d) => ys(d.y));
+
+      // extreme-point labels
+      labelsG.selectAll("*").remove();
+      for (const p of labelPoints) {
+        const cx = xs(p.x);
+        const cy = ys(p.y);
+        labelsG
+          .append("circle")
+          .attr("cx", cx)
+          .attr("cy", cy)
+          .attr("r", 5)
+          .attr("fill", "none")
+          .attr("stroke", "#f8fafc")
+          .attr("stroke-width", 1.2);
+        const goLeft = cx > innerW - 120;
+        const tx = cx + (goLeft ? -8 : 8);
+        const ty = Math.max(12, Math.min(innerH - 4, cy - 8));
+        labelsG
+          .append("text")
+          .attr("x", tx)
+          .attr("y", ty)
+          .attr("text-anchor", goLeft ? "end" : "start")
+          .attr("fill", "#f8fafc")
+          .attr("font-size", 11)
+          .attr("font-style", "italic")
+          .attr("stroke", "#07090d")
+          .attr("stroke-width", 3)
+          .attr("paint-order", "stroke")
+          .text(p.name);
+      }
+    };
+
+    // initial render
+    draw(xBase, yBase);
+
+    // zoom: 1× is the full view (max zoom-out), up to 50× zoom-in. Wheel
+    // zooms, drag pans. In no-X mode we only zoom Y; X stays jittered 0..1.
+    const zoomBeh = d3
+      .zoom<SVGSVGElement, unknown>()
+      .scaleExtent([1, 50])
+      .translateExtent([
+        [0, 0],
+        [innerW, innerH],
+      ])
+      .extent([
+        [0, 0],
+        [innerW, innerH],
+      ])
+      .on("zoom", (event) => {
+        const t = event.transform as d3.ZoomTransform;
+        const newXs = noXAxis ? xBase : (t.rescaleX(xBase as any) as AnyScale);
+        const newYs = t.rescaleY(yBase as any) as AnyScale;
+        draw(newXs, newYs);
+      });
+
+    zoomBehRef.current = zoomBeh;
+    (svg as any).call(zoomBeh).style("cursor", "grab");
+    svg.on("mousedown.cursor", () => svg.style("cursor", "grabbing"));
+    svg.on("mouseup.cursor", () => svg.style("cursor", "grab"));
   }, [visiblePoints, xCol, yCol, logScale, showFit, colorMode, groups, innerW, innerH, margin.left, margin.top, noXAxis]);
+
+  const zoomBy = (k: number) => {
+    if (!zoomBehRef.current || !svgRef.current) return;
+    d3.select(svgRef.current)
+      .transition()
+      .duration(180)
+      .call(zoomBehRef.current.scaleBy as any, k);
+  };
+  const zoomReset = () => {
+    if (!zoomBehRef.current || !svgRef.current) return;
+    d3.select(svgRef.current)
+      .transition()
+      .duration(180)
+      .call(zoomBehRef.current.transform as any, d3.zoomIdentity);
+  };
 
   const selectCls =
     "bg-panel border border-rule rounded px-2 py-1 text-[12px] text-slate-200 focus:outline-none focus:border-slate-500";
@@ -506,6 +584,30 @@ export default function LifeHistoryScatter() {
         >
           Regression line
         </button>
+        <div className="flex items-center gap-1 ml-auto">
+          <span className="text-[11px] text-slate-500 mr-1">Zoom</span>
+          <button
+            onClick={() => zoomBy(1 / 1.5)}
+            aria-label="Zoom out"
+            className="text-[12px] w-7 h-7 rounded border border-rule text-slate-300 hover:border-slate-500"
+          >
+            −
+          </button>
+          <button
+            onClick={() => zoomBy(1.5)}
+            aria-label="Zoom in"
+            className="text-[12px] w-7 h-7 rounded border border-rule text-slate-300 hover:border-slate-500"
+          >
+            +
+          </button>
+          <button
+            onClick={zoomReset}
+            aria-label="Reset zoom"
+            className="text-[11px] px-2 h-7 rounded border border-rule text-slate-300 hover:border-slate-500"
+          >
+            Reset
+          </button>
+        </div>
       </div>
 
       {/* legend */}
