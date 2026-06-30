@@ -101,6 +101,18 @@ export default function Home() {
             studying, not approved therapies.
           </p>
           <p>
+            Life-history trait space data comes from{" "}
+            <a
+              className="text-blue-300 hover:text-blue-200 underline underline-offset-2"
+              href="https://genomics.senescence.info/species/index.html"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              AnAge
+            </a>
+            , the Animal Ageing and Longevity Database (HAGR / Tacutu et al.).
+          </p>
+          <p>
             Inspired by the radial mammal phylogeny from the{" "}
             <a
               className="text-blue-300 hover:text-blue-200 underline underline-offset-2"

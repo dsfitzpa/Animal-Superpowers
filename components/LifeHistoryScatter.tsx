@@ -22,9 +22,8 @@ type LifeHistory = {
 
 const DATA = lifeHistory as unknown as LifeHistory;
 
-// Group the many taxonomic orders into a small, stable color set. Anything
-// not listed falls into "Other" so the legend never explodes.
-const ORDER_GROUP: Record<string, string> = {
+// Curated grouping for mammalian orders — keeps the legend short and stable.
+const MAMMAL_ORDER_GROUP: Record<string, string> = {
   Rodentia: "Rodents",
   Soricomorpha: "Shrews/insectivores",
   Erinaceomorpha: "Shrews/insectivores",
@@ -47,7 +46,7 @@ const ORDER_GROUP: Record<string, string> = {
   Peramelemorphia: "Marsupials",
 };
 
-const GROUP_COLOR: Record<string, string> = {
+const MAMMAL_GROUP_COLOR: Record<string, string> = {
   Rodents: "#2a78d6",
   "Shrews/insectivores": "#85b7eb",
   Carnivores: "#1baf7a",
@@ -59,17 +58,30 @@ const GROUP_COLOR: Record<string, string> = {
   Other: "#6b7280",
 };
 
-// When the chart is showing a non-mammal class, the order-based grouping is
-// meaningless, so we colour by Class instead. A small categorical palette.
-const CLASS_PALETTE = [
-  "#2a78d6", "#1baf7a", "#eda100", "#9085e9",
-  "#e34948", "#e87ba4", "#eb6834", "#85b7eb", "#63992e",
+// Generic categorical palette used when grouping by Class (All view) or by
+// raw Order (any non-mammal single-class view).
+const CATEGORICAL_PALETTE = [
+  "#2a78d6", "#1baf7a", "#eda100", "#9085e9", "#e34948",
+  "#e87ba4", "#eb6834", "#85b7eb", "#63992e", "#c47ad6",
+  "#3ab0a8", "#d6a83a", "#8c8c8c",
 ];
 
-function groupForRecord(r: Rec, colorByClass: boolean): string {
-  if (colorByClass) return r.Class ?? "Unknown";
+const X_NONE = "(none — Y distribution)";
+
+type ColorMode = "mammal-group" | "order" | "class";
+
+function colorModeFor(activeClass: string): ColorMode {
+  if (activeClass === "All") return "class";
+  if (activeClass === "Mammalia") return "mammal-group";
+  return "order";
+}
+
+function groupForRecord(r: Rec, mode: ColorMode): string {
+  if (mode === "class") return r.Class ?? "Unknown";
+  if (mode === "order") return r.Order ?? "Unknown";
+  // mammal-group
   if (r.Class !== "Mammalia") return "Other";
-  return ORDER_GROUP[r.Order ?? ""] ?? "Other";
+  return MAMMAL_ORDER_GROUP[r.Order ?? ""] ?? "Other";
 }
 
 // least-squares fit on log10(x), log10(y) — returns slope/intercept in log space
@@ -87,7 +99,6 @@ function logRegression(pts: { x: number; y: number }[]) {
   }
   const slope = den === 0 ? 0 : num / den;
   const intercept = my - slope * mx;
-  // R^2
   let ssTot = 0;
   let ssRes = 0;
   for (let i = 0; i < n; i++) {
@@ -103,11 +114,24 @@ function niceUnitLabel(col: string): string {
   return col;
 }
 
+// Deterministic [0,1) jitter from a string, so the strip plot is stable
+// across re-renders.
+function hashJitter(s: string): number {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return ((h >>> 0) % 10000) / 10000;
+}
+
 export default function LifeHistoryScatter() {
-  const [xCol, setXCol] = useState(DATA.defaultX);
-  const [yCol, setYCol] = useState(DATA.defaultY);
+  const [xCol, setXCol] = useState<string>(DATA.defaultX);
+  const [yCol, setYCol] = useState<string>(DATA.defaultY);
   const [logScale, setLogScale] = useState(true);
   const [showFit, setShowFit] = useState(true);
+
+  const noXAxis = xCol === X_NONE;
 
   // class filter — default to Mammalia (matches the page's theme)
   const allClasses = useMemo(() => {
@@ -121,36 +145,53 @@ export default function LifeHistoryScatter() {
   }, []);
   const [activeClass, setActiveClass] = useState("Mammalia");
 
-  const colorByClass = activeClass === "All";
+  const colorMode = colorModeFor(activeClass);
 
   // active point set
   const points = useMemo(() => {
     return DATA.records
       .filter((r) => activeClass === "All" || r.Class === activeClass)
       .map((r) => {
-        const x = r[xCol];
         const y = r[yCol];
-        if (typeof x !== "number" || typeof y !== "number") return null;
-        if (logScale && (x <= 0 || y <= 0)) return null;
+        if (typeof y !== "number") return null;
+        if (logScale && y <= 0) return null;
+
+        let x: number;
+        if (noXAxis) {
+          x = hashJitter(r.name);
+        } else {
+          const xv = r[xCol];
+          if (typeof xv !== "number") return null;
+          if (logScale && xv <= 0) return null;
+          x = xv;
+        }
+
         return {
           name: r.name,
           x,
           y,
-          group: groupForRecord(r, colorByClass),
+          group: groupForRecord(r, colorMode),
         };
       })
       .filter((p): p is { name: string; x: number; y: number; group: string } => p !== null);
-  }, [xCol, yCol, logScale, activeClass, colorByClass]);
+  }, [xCol, yCol, logScale, activeClass, colorMode, noXAxis]);
 
+  // Stable group ordering: mammal-group uses curated order; class/order are
+  // ordered by descending count so common groups read first.
   const groups = useMemo(() => {
     const set = new Set(points.map((p) => p.group));
-    if (colorByClass) return [...set].sort();
-    // preserve the canonical group order for mammals
-    return Object.keys(GROUP_COLOR).filter((g) => set.has(g));
-  }, [points, colorByClass]);
+    if (colorMode === "mammal-group") {
+      return Object.keys(MAMMAL_GROUP_COLOR).filter((g) => set.has(g));
+    }
+    const counts = new Map<string, number>();
+    for (const p of points) counts.set(p.group, (counts.get(p.group) ?? 0) + 1);
+    return [...set].sort((a, b) => (counts.get(b) ?? 0) - (counts.get(a) ?? 0));
+  }, [points, colorMode]);
 
-  const colorFor = (g: string, i: number) =>
-    colorByClass ? CLASS_PALETTE[i % CLASS_PALETTE.length] : GROUP_COLOR[g] ?? "#6b7280";
+  const colorFor = (g: string, i: number) => {
+    if (colorMode === "mammal-group") return MAMMAL_GROUP_COLOR[g] ?? "#6b7280";
+    return CATEGORICAL_PALETTE[i % CATEGORICAL_PALETTE.length];
+  };
 
   // toggle groups on/off
   const [hidden, setHidden] = useState<Set<string>>(new Set());
@@ -183,31 +224,50 @@ export default function LifeHistoryScatter() {
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    const xExtent = d3.extent(visiblePoints, (d) => d.x) as [number, number];
     const yExtent = d3.extent(visiblePoints, (d) => d.y) as [number, number];
 
-    const xScale = logScale
-      ? d3.scaleLog().domain([xExtent[0] * 0.8, xExtent[1] * 1.2]).range([0, innerW])
-      : d3.scaleLinear().domain([0, xExtent[1] * 1.05]).range([0, innerW]);
+    const xScale = noXAxis
+      ? d3.scaleLinear().domain([0, 1]).range([0, innerW])
+      : logScale
+        ? d3
+            .scaleLog()
+            .domain([
+              (d3.min(visiblePoints, (d) => d.x) as number) * 0.8,
+              (d3.max(visiblePoints, (d) => d.x) as number) * 1.2,
+            ])
+            .range([0, innerW])
+        : d3
+            .scaleLinear()
+            .domain([0, (d3.max(visiblePoints, (d) => d.x) as number) * 1.05])
+            .range([0, innerW]);
     const yScale = logScale
       ? d3.scaleLog().domain([yExtent[0] * 0.8, yExtent[1] * 1.2]).range([innerH, 0])
       : d3.scaleLinear().domain([0, yExtent[1] * 1.05]).range([innerH, 0]);
 
-    // grid + axes
-    const xAxis = logScale
-      ? d3.axisBottom(xScale).ticks(6, "~s")
-      : d3.axisBottom(xScale).ticks(6);
+    // axes
+    if (!noXAxis) {
+      const xAxis = logScale
+        ? d3.axisBottom(xScale).ticks(6, "~s")
+        : d3.axisBottom(xScale).ticks(6);
+      g.append("g")
+        .attr("transform", `translate(0,${innerH})`)
+        .call(xAxis as any)
+        .call((sel) => sel.selectAll("text").attr("fill", "#94a3b8").attr("font-size", 10))
+        .call((sel) => sel.selectAll("line").attr("stroke", "#1f2937"))
+        .call((sel) => sel.select(".domain").attr("stroke", "#334155"));
+    } else {
+      // baseline line only, no ticks
+      g.append("line")
+        .attr("x1", 0)
+        .attr("x2", innerW)
+        .attr("y1", innerH)
+        .attr("y2", innerH)
+        .attr("stroke", "#334155");
+    }
+
     const yAxis = logScale
       ? d3.axisLeft(yScale).ticks(6, "~s")
       : d3.axisLeft(yScale).ticks(6);
-
-    g.append("g")
-      .attr("transform", `translate(0,${innerH})`)
-      .call(xAxis as any)
-      .call((sel) => sel.selectAll("text").attr("fill", "#94a3b8").attr("font-size", 10))
-      .call((sel) => sel.selectAll("line").attr("stroke", "#1f2937"))
-      .call((sel) => sel.select(".domain").attr("stroke", "#334155"));
-
     g.append("g")
       .call(yAxis as any)
       .call((sel) => sel.selectAll("text").attr("fill", "#94a3b8").attr("font-size", 10))
@@ -232,7 +292,11 @@ export default function LifeHistoryScatter() {
       .attr("text-anchor", "middle")
       .attr("fill", "#cbd5e1")
       .attr("font-size", 12)
-      .text(niceUnitLabel(xCol) + (logScale ? " (log)" : ""));
+      .text(
+        noXAxis
+          ? "no X axis — points jittered horizontally"
+          : niceUnitLabel(xCol) + (logScale ? " (log)" : "")
+      );
     g.append("text")
       .attr("transform", "rotate(-90)")
       .attr("x", -innerH / 2)
@@ -242,17 +306,19 @@ export default function LifeHistoryScatter() {
       .attr("font-size", 12)
       .text(niceUnitLabel(yCol) + (logScale ? " (log)" : ""));
 
-    // regression line (only meaningful in log-log per the source papers)
-    if (showFit && logScale && visiblePoints.length > 2) {
-      const { slope, intercept, r2 } = logRegression(visiblePoints);
-      const x0 = xExtent[0];
-      const x1 = xExtent[1];
-      const y0 = Math.pow(10, slope * Math.log10(x0) + intercept);
-      const y1 = Math.pow(10, slope * Math.log10(x1) + intercept);
+    // regression line (only meaningful in log-log per the source papers,
+    // and only when an X variable is selected)
+    let fit: { slope: number; intercept: number; r2: number } | null = null;
+    if (!noXAxis && showFit && logScale && visiblePoints.length > 2) {
+      fit = logRegression(visiblePoints);
+      const xMin = d3.min(visiblePoints, (d) => d.x) as number;
+      const xMax = d3.max(visiblePoints, (d) => d.x) as number;
+      const y0 = Math.pow(10, fit.slope * Math.log10(xMin) + fit.intercept);
+      const y1 = Math.pow(10, fit.slope * Math.log10(xMax) + fit.intercept);
       g.append("line")
-        .attr("x1", xScale(x0))
+        .attr("x1", xScale(xMin))
         .attr("y1", yScale(y0))
-        .attr("x2", xScale(x1))
+        .attr("x2", xScale(xMax))
         .attr("y2", yScale(y1))
         .attr("stroke", "#f5d76e")
         .attr("stroke-width", 1.5)
@@ -263,7 +329,34 @@ export default function LifeHistoryScatter() {
         .attr("text-anchor", "end")
         .attr("fill", "#f5d76e")
         .attr("font-size", 11)
-        .text(`slope ${slope.toFixed(2)} · R² ${r2.toFixed(2)}`);
+        .text(`slope ${fit.slope.toFixed(2)} · R² ${fit.r2.toFixed(2)}`);
+    }
+
+    // pick extremes to auto-label: max-Y, min-Y, and (if a fit was drawn) the
+    // point with the largest residual from the regression line in log space.
+    const labels: { name: string; cx: number; cy: number; kind: string }[] = [];
+    const seen = new Set<string>();
+    const pushLabel = (p: { name: string; x: number; y: number }, kind: string) => {
+      if (seen.has(p.name)) return;
+      seen.add(p.name);
+      labels.push({ name: p.name, cx: xScale(p.x), cy: yScale(p.y), kind });
+    };
+    const topY = visiblePoints.reduce((a, b) => (b.y > a.y ? b : a));
+    const botY = visiblePoints.reduce((a, b) => (b.y < a.y ? b : a));
+    pushLabel(topY, "longest-lived");
+    pushLabel(botY, "shortest-lived");
+    if (fit) {
+      let bestResid = 0;
+      let bestPt: typeof visiblePoints[number] | null = null;
+      for (const p of visiblePoints) {
+        const pred = fit.slope * Math.log10(p.x) + fit.intercept;
+        const r = Math.abs(Math.log10(p.y) - pred);
+        if (r > bestResid) {
+          bestResid = r;
+          bestPt = p;
+        }
+      }
+      if (bestPt) pushLabel(bestPt, "outlier");
     }
 
     // points
@@ -283,11 +376,43 @@ export default function LifeHistoryScatter() {
         setTip({
           x: mx,
           y: my,
-          text: `${d.name} — ${formatVal(d.x)} ${shortUnit(xCol)}, ${formatVal(d.y)} ${shortUnit(yCol)}`,
+          text: noXAxis
+            ? `${d.name} — ${formatVal(d.y)} ${shortUnit(yCol)}`
+            : `${d.name} — ${formatVal(d.x)} ${shortUnit(xCol)}, ${formatVal(d.y)} ${shortUnit(yCol)}`,
         });
       })
       .on("mouseleave", () => setTip(null));
-  }, [visiblePoints, xCol, yCol, logScale, showFit, colorByClass, groups, innerW, innerH, margin.left, margin.top]);
+
+    // extreme-point labels — drawn last so they sit above the dots
+    const labelGroup = g.append("g").attr("pointer-events", "none");
+    for (const l of labels) {
+      // small leader dot to make the labeled point visible above the cloud
+      labelGroup
+        .append("circle")
+        .attr("cx", l.cx)
+        .attr("cy", l.cy)
+        .attr("r", 5)
+        .attr("fill", "none")
+        .attr("stroke", "#f8fafc")
+        .attr("stroke-width", 1.2);
+      // offset label so it doesn't clip the right edge or sit under the dot
+      const goLeft = l.cx > innerW - 120;
+      const tx = l.cx + (goLeft ? -8 : 8);
+      const ty = Math.max(12, Math.min(innerH - 4, l.cy - 8));
+      labelGroup
+        .append("text")
+        .attr("x", tx)
+        .attr("y", ty)
+        .attr("text-anchor", goLeft ? "end" : "start")
+        .attr("fill", "#f8fafc")
+        .attr("font-size", 11)
+        .attr("font-style", "italic")
+        .attr("stroke", "#07090d")
+        .attr("stroke-width", 3)
+        .attr("paint-order", "stroke")
+        .text(l.name);
+    }
+  }, [visiblePoints, xCol, yCol, logScale, showFit, colorMode, groups, innerW, innerH, margin.left, margin.top, noXAxis]);
 
   const selectCls =
     "bg-panel border border-rule rounded px-2 py-1 text-[12px] text-slate-200 focus:outline-none focus:border-slate-500";
@@ -304,8 +429,9 @@ export default function LifeHistoryScatter() {
         Adult body mass against maximum lifespan across the AnAge dataset. Larger
         species tend to live longer along an allometric slope near ¼; bats, the
         naked mole-rat, and primates ride well above it. Pick any two measured
-        traits for the axes, switch the class, and read the fitted log-log slope
-        and R² off the dashed line.
+        traits for the axes — or set X to <span className="italic">none</span> to
+        see a single trait&apos;s distribution — switch the class, and read the
+        fitted log-log slope and R² off the dashed line.
       </p>
 
       {/* controls */}
@@ -317,6 +443,7 @@ export default function LifeHistoryScatter() {
             value={xCol}
             onChange={(e) => setXCol(e.target.value)}
           >
+            <option value={X_NONE}>{X_NONE}</option>
             {DATA.numericColumns.map((c) => (
               <option key={c} value={c}>
                 {c}
@@ -368,10 +495,13 @@ export default function LifeHistoryScatter() {
         </button>
         <button
           onClick={() => setShowFit((v) => !v)}
+          disabled={noXAxis}
           className={`text-[12px] px-2 py-1 rounded border transition ${
-            showFit
-              ? "border-slate-500 text-slate-100 bg-panel"
-              : "border-rule text-slate-400"
+            noXAxis
+              ? "border-rule text-slate-600 cursor-not-allowed"
+              : showFit
+                ? "border-slate-500 text-slate-100 bg-panel"
+                : "border-rule text-slate-400"
           }`}
         >
           Regression line
@@ -406,7 +536,7 @@ export default function LifeHistoryScatter() {
           viewBox={`0 0 ${width} ${height}`}
           className="w-full h-auto"
           role="img"
-          aria-label={`Scatter plot of ${xCol} versus ${yCol} for ${visiblePoints.length} ${
+          aria-label={`Scatter plot of ${noXAxis ? "Y-distribution" : xCol + " versus " + yCol} for ${visiblePoints.length} ${
             activeClass === "All" ? "" : activeClass + " "
           }species`}
         />
@@ -427,15 +557,6 @@ export default function LifeHistoryScatter() {
           {activeClass === "All" ? "all classes" : activeClass}
         </div>
       </div>
-
-      <p className="text-[10px] text-slate-500 mt-2 leading-relaxed">
-        Data: AnAge (Tacutu et al. 2013; de Magalhães &amp; Costa 2009). Allometric
-        framing after Healy et al. 2014 (<span className="italic">Proc. R. Soc. B</span>{" "}
-        281:20140298) and the mass-longevity geometry of Szekely et al. 2015 (
-        <span className="italic">PLoS Comput Biol</span> 11:e1004524). The dashed line
-        is an ordinary least-squares fit on log₁₀-transformed axes for the currently
-        shown species.
-      </p>
     </div>
   );
 }
