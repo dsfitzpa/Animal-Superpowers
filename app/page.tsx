@@ -5,6 +5,7 @@ import { dataset } from "@/lib/data";
 import MammalTree from "@/components/MammalTree";
 import FilterSidebar from "@/components/FilterSidebar";
 import SpeciesDetail from "@/components/SpeciesDetail";
+import LifeHistoryScatter from "@/components/LifeHistoryScatter";
 
 export default function Home() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -31,18 +32,6 @@ export default function Home() {
     }
     return counts;
   }, []);
-
-  const highlightedList = useMemo(() => {
-    if (selected.size === 0) {
-      // default: surface all curated species (those with non-empty reviews)
-      return Object.entries(dataset.species_data)
-        .filter(([, v]) => v.superpowers.length > 0)
-        .map(([k]) => k);
-    }
-    return Object.entries(dataset.species_data)
-      .filter(([, v]) => v.superpowers.some((p) => selected.has(p)))
-      .map(([k]) => k);
-  }, [selected]);
 
   return (
     <main className="min-h-screen">
@@ -88,10 +77,7 @@ export default function Home() {
             therapeutic targets.
           </div>
 
-          <HighlightList
-            names={highlightedList}
-            onOpen={(n) => setOpenSpecies(n)}
-          />
+          <LifeHistoryScatter />
         </section>
       </div>
 
@@ -135,42 +121,5 @@ export default function Home() {
         onClose={() => setOpenSpecies(null)}
       />
     </main>
-  );
-}
-
-function HighlightList({
-  names,
-  onOpen,
-}: {
-  names: string[];
-  onOpen: (n: string) => void;
-}) {
-  if (names.length === 0) return null;
-  return (
-    <div className="mt-8">
-      <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500 mb-3">
-        Highlighted species
-      </div>
-      <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {names.map((n) => {
-          const rec = (dataset as { species_data: Record<string, { common: string; headline: string }> }).species_data[n];
-          if (!rec) return null;
-          return (
-            <li key={n}>
-              <button
-                onClick={() => onOpen(n)}
-                className="w-full text-left p-3 border border-rule hover:border-slate-600 rounded bg-panel/60 transition"
-              >
-                <div className="text-slate-100 text-[13px]">{rec.common}</div>
-                <div className="italic text-slate-500 text-[11px]">{n}</div>
-                <div className="text-slate-400 text-[12px] mt-1 leading-snug">
-                  {rec.headline}
-                </div>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
   );
 }
