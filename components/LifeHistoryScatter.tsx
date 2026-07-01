@@ -204,7 +204,12 @@ export default function LifeHistoryScatter() {
     });
   useEffect(() => setHidden(new Set()), [activeClass]);
 
-  const visiblePoints = points.filter((p) => !hidden.has(p.group));
+  // Memoize so hover-driven re-renders (setTip) don't tear down the d3 effect
+  // and reset the zoom transform.
+  const visiblePoints = useMemo(
+    () => points.filter((p) => !hidden.has(p.group)),
+    [points, hidden]
+  );
 
   const svgRef = useRef<SVGSVGElement | null>(null);
   const zoomBehRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
@@ -464,13 +469,6 @@ export default function LifeHistoryScatter() {
         [0, 0],
         [innerW, innerH],
       ])
-      // d3's default wheelDelta is ~0.002 per pixel — on most desktop trackpads
-      // that turns one flick into a 1.5x jump. Soften it ~4x for a more gradual
-      // wheel zoom; pinch-zoom (ctrlKey) stays brisker since it's deliberate.
-      .wheelDelta((event) => {
-        const k = event.deltaMode === 1 ? 0.0125 : event.deltaMode ? 0.25 : 0.0005;
-        return -event.deltaY * k * (event.ctrlKey ? 2 : 1);
-      })
       .on("zoom", (event) => {
         const t = event.transform as d3.ZoomTransform;
         const newXs = noXAxis ? xBase : (t.rescaleX(xBase as any) as AnyScale);
@@ -594,14 +592,14 @@ export default function LifeHistoryScatter() {
         <div className="flex items-center gap-1 ml-auto">
           <span className="text-[11px] text-slate-500 mr-1">Zoom</span>
           <button
-            onClick={() => zoomBy(1 / 1.25)}
+            onClick={() => zoomBy(1 / 1.5)}
             aria-label="Zoom out"
             className="text-[12px] w-7 h-7 rounded border border-rule text-slate-300 hover:border-slate-500"
           >
             −
           </button>
           <button
-            onClick={() => zoomBy(1.25)}
+            onClick={() => zoomBy(1.5)}
             aria-label="Zoom in"
             className="text-[12px] w-7 h-7 rounded border border-rule text-slate-300 hover:border-slate-500"
           >
